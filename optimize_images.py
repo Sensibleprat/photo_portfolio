@@ -7,17 +7,21 @@ Compresses and resizes images for web delivery
 import os
 from PIL import Image
 from pathlib import Path
+import pillow_heif
+
+# Register HEIC opener with Pillow
+pillow_heif.register_heif_opener()
 
 # Configuration
 SOURCE_DIR = "photos"
 OUTPUT_DIR = "optimized"
 
 # Image Quality Settings
-ENABLE_OPTIMIZATION = False  # Set to True to optimize, False to preserve originals
-MAX_WIDTH = 4000            # Only used if ENABLE_OPTIMIZATION = True
-MAX_HEIGHT = 4000           # Only used if ENABLE_OPTIMIZATION = True
-JPEG_QUALITY = 95           # 95% quality (minimal loss) - only if optimizing
-PRESERVE_FORMAT = True      # Keep original format (PNG stays PNG, etc.)
+ENABLE_OPTIMIZATION = True   # Enable to convert HEIC → JPG for browsers
+MAX_WIDTH = 4000             # Keep large dimensions
+MAX_HEIGHT = 4000            # Keep large dimensions
+JPEG_QUALITY = 95            # 95% quality (minimal loss)
+PRESERVE_FORMAT = False      # Convert all to JPG for browser compatibility
 
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp'}
 
