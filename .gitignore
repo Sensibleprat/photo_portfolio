@@ -1,1 +1,39 @@
+# .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+
+# Processed images (can be regenerated)
+optimized/
+
+# Downloaded photos (synced from Google Drive)
+photos/*
+!photos/README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Old backup
+old_google_drive_version/
+
+# Credentials (NEVER commit these!)
 credentials.json
+token.json
+*.json
+!package.json
+!data.json
+!site/data.json

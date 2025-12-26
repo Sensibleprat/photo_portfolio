@@ -11,16 +11,21 @@ from pathlib import Path
 # Configuration
 SOURCE_DIR = "photos"
 OUTPUT_DIR = "optimized"
-MAX_WIDTH = 2000
-MAX_HEIGHT = 2000
-JPEG_QUALITY = 85
+
+# Image Quality Settings
+ENABLE_OPTIMIZATION = False  # Set to True to optimize, False to preserve originals
+MAX_WIDTH = 4000            # Only used if ENABLE_OPTIMIZATION = True
+MAX_HEIGHT = 4000           # Only used if ENABLE_OPTIMIZATION = True
+JPEG_QUALITY = 95           # 95% quality (minimal loss) - only if optimizing
+PRESERVE_FORMAT = True      # Keep original format (PNG stays PNG, etc.)
+
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp'}
 
 def setup_directories():
     """Create output directory structure matching source"""
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
-    
+
     # Create subdirectories for each category
     for category in os.listdir(SOURCE_DIR):
         category_path = os.path.join(SOURCE_DIR, category)
@@ -29,44 +34,72 @@ def setup_directories():
             os.makedirs(output_category_path, exist_ok=True)
 
 def optimize_image(input_path, output_path):
-    """Optimize a single image"""
+    """Optimize a single image (or copy if optimization disabled)"""
     try:
+        # If optimization is disabled, just copy the file
+        if not ENABLE_OPTIMIZATION:
+            import shutil
+            shutil.copy2(input_path, output_path)
+            return True
+        
         # Open image
         with Image.open(input_path) as img:
-            # Convert RGBA to RGB if necessary (for JPEG)
-            if img.mode in ('RGBA', 'LA', 'P'):
-                background = Image.new('RGB', img.size, (255, 255, 255))
-                if img.mode == 'P':
-                    img = img.convert('RGBA')
-                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
-                img = background
-            elif img.mode != 'RGB':
-                img = img.convert('RGB')
+            # Determine output format
+            if PRESERVE_FORMAT:
+                output_format = img.format if img.format in ['JPEG', 'PNG', 'WEBP'] else 'JPEG'
+                # Update output path extension if needed
+                if output_format != 'JPEG':
+                    base = os.path.splitext(output_path)[0]
+                    ext_map = {'PNG': '.png', 'WEBP': '.webp'}
+                    output_path = base + ext_map.get(output_format, '.jpg')
+            else:
+                output_format = 'JPEG'
+            
+            # Convert RGBA to RGB if saving as JPEG
+            if output_format == 'JPEG':
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
             
             # Resize if needed
             if img.width > MAX_WIDTH or img.height > MAX_HEIGHT:
                 img.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
             
             # Save optimized version
-            img.save(output_path, 'JPEG', quality=JPEG_QUALITY, optimize=True)
+            save_kwargs = {'optimize': True}
+            if output_format == 'JPEG':
+                save_kwargs['quality'] = JPEG_QUALITY
+            
+            img.save(output_path, output_format, **save_kwargs)
             
         return True
     except Exception as e:
-        print(f"   ⚠️  Failed to optimize {input_path}: {e}")
+        print(f"   ⚠️  Failed to process {input_path}: {e}")
         return False
 
 def process_all_images():
     """Process all images in the photos directory"""
     if not os.path.exists(SOURCE_DIR):
         print(f"❌ Error: '{SOURCE_DIR}' directory not found!")
-        print(f"   Please create a '{SOURCE_DIR}' folder and add your photo categories inside it.")
+        print(f"   Run 'python sync_from_drive.py' first to download photos from Google Drive.")
         return
     
     setup_directories()
     
-    print("🎨 Starting Image Optimization...")
+    mode_text = "Copying Images (Full Quality)" if not ENABLE_OPTIMIZATION else "Optimizing Images"
+    print(f"🎨 {mode_text}...")
     print(f"   Source: {SOURCE_DIR}/")
     print(f"   Output: {OUTPUT_DIR}/")
+    if ENABLE_OPTIMIZATION:
+        print(f"   Quality: {JPEG_QUALITY}%")
+        print(f"   Max Size: {MAX_WIDTH}x{MAX_HEIGHT}px")
+    else:
+        print(f"   Mode: FULL QUALITY (No compression)")
     print()
     
     total_processed = 0
@@ -90,17 +123,21 @@ def process_all_images():
         for image_file in sorted(images):
             input_path = os.path.join(category_path, image_file)
             
-            # Change extension to .jpg for output
-            output_filename = os.path.splitext(image_file)[0] + '.jpg'
+            # Determine output filename
+            if ENABLE_OPTIMIZATION and not PRESERVE_FORMAT:
+                output_filename = os.path.splitext(image_file)[0] + '.jpg'
+            else:
+                output_filename = image_file
+            
             output_path = os.path.join(output_category_path, output_filename)
             
-            # Skip if already optimized and newer than source
+            # Skip if already processed and newer than source
             if os.path.exists(output_path):
                 if os.path.getmtime(output_path) > os.path.getmtime(input_path):
                     total_skipped += 1
                     continue
             
-            # Optimize the image
+            # Process the image
             if optimize_image(input_path, output_path):
                 print(f"   ✓ {image_file}")
                 total_processed += 1
@@ -108,9 +145,10 @@ def process_all_images():
                 total_skipped += 1
     
     print()
-    print(f"✅ Optimization Complete!")
+    action_text = "Complete!" if not ENABLE_OPTIMIZATION else "Optimization Complete!"
+    print(f"✅ {action_text}")
     print(f"   Processed: {total_processed} images")
-    print(f"   Skipped: {total_skipped} images (already optimized)")
+    print(f"   Skipped: {total_skipped} images (already processed)")
 
 if __name__ == '__main__':
     process_all_images()

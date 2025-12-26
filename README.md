@@ -1,36 +1,47 @@
-# 📸 Photography Portfolio - Static Site Generator
+# 📸 Photography Portfolio - Google Drive + Cloudflare Pages
 
-A beautiful, fast, and completely free photography portfolio website that auto-generates from your local photo folders. No servers, no API limits, just pure static hosting magic.
+A beautiful, fast, and free photography portfolio that syncs from Google Drive and deploys to Cloudflare Pages. **Full quality images, no server required!**
 
 ## 🌟 Features
 
-- ✅ **Zero Cost** - Host on GitHub Pages for free
+- ✅ **Zero Cost** - Free hosting on Cloudflare Pages
 - ✅ **No Server Required** - Pure static site
+- ✅ **Google Drive Integration** - Organize photos in Drive
+- ✅ **Full Quality** - No compression by default
+- ✅ **One-Command Deployment** - Sync, generate, and deploy instantly
 - ✅ **Auto-Organization** - Folder names become navigation tabs
-- ✅ **One-Command Deployment** - Update your portfolio in seconds
-- ✅ **Fast & Reliable** - No rate limits or API quotas
-- ✅ **Image Optimization** - Automatic compression and resizing
 - ✅ **Responsive Design** - Beautiful on all devices
+
+## 🏗️ Architecture
+
+```
+Google Drive (Storage)
+      ↓ (sync on your laptop)
+Local photos/ folder
+      ↓ (optional optimization)
+optimized/ folder
+      ↓ (generate site)
+site/ folder
+      ↓ (deploy to Cloudflare)
+Live Website (24/7 hosting)
+```
+
+**Your laptop only needed when updating!** After deployment, it can be off.
 
 ## 📁 Project Structure
 
 ```
 portfolio_struct/
-├── photos/                    # Your photo folders
-│   ├── Nature/               # Each folder = 1 tab on website
-│   │   ├── photo1.jpg
-│   │   └── photo2.jpg
-│   ├── Street/
-│   └── Landscape/
-├── optimized/                # Auto-generated optimized images
-├── site/                     # Generated website files
-│   ├── index.html
-│   ├── style.css
-│   ├── script.js
-│   └── data.json
-├── generate_site.py          # Main site generator
-├── optimize_images.py        # Image optimization script
+├── photos/                   # Downloaded from Google Drive
+├── optimized/                # Processed images (git-ignored)
+├── site/                     # Generated website
+├── old_google_drive_version/ # Backup of original approach
+│   └── credentials.json      # Google Drive service account
+├── sync_from_drive.py        # Download photos from Drive
+├── optimize_images.py        # Process images (optional compression)
+├── generate_site.py          # Generate static site
 ├── deploy.sh                 # One-click deployment
+├── index.html, style.css, script.js
 └── README.md
 ```
 
@@ -40,154 +51,187 @@ portfolio_struct/
 
 - Python 3.7+
 - Git
-- GitHub account (for hosting)
+- Google Drive with organized photos
+- Google Cloud Service Account (for Drive API)
 
 ### Installation
 
-1. **Clone or download this repository**
+1. **Install Dependencies**
    ```bash
-   cd portfolio_struct
-   ```
-
-2. **Install Python dependencies**
-   ```bash
+   source .venv/bin/activate  # Activate virtual environment
    pip install -r requirements.txt
    ```
 
-3. **Add your photos**
-   - Create folders inside `photos/` directory
-   - Each folder name becomes a tab (e.g., `Nature`, `Street`, `Portraits`)
-   - Add your photos to these folders
+2. **Set Up Google Drive**
+   - Your photos must be in a Google Drive folder
+   - Each subfolder = 1 navigation tab (e.g., "Nature", "Street")
+   - Service account credentials should be in `old_google_drive_version/credentials.json`
+   - Update `PARENT_FOLDER_ID` in `sync_from_drive.py` with your folder ID
 
-4. **Generate your portfolio**
-   ```bash
-   python generate_site.py
+3. **Configure Image Quality**
+   
+   Edit [`optimize_images.py`](file:///Users/prathampunj/Desktop/Weekend%20Projects/portfolio_struct/optimize_images.py#L16):
+   ```python
+   ENABLE_OPTIMIZATION = False  # False = Full quality (default)
+   JPEG_QUALITY = 95            # If optimization enabled, 95% quality
    ```
 
-5. **Test locally**
+4. **First Sync & Generate**
    ```bash
-   # Open site/index.html in your browser
-   # OR run a local server:
+   python sync_from_drive.py   # Download from Google Drive
+   python optimize_images.py   # Process images
+   python generate_site.py     # Generate website
+   ```
+
+5. **Test Locally**
+   ```bash
    python -m http.server 8000 --directory site
    # Visit: http://localhost:8000
    ```
 
-## 📤 Deployment to GitHub Pages
+## 🌐 Deployment
 
-### First-Time Setup
+### Option 1: Cloudflare Pages (Recommended)
 
-1. **Create a new GitHub repository** (e.g., `my-portfolio`)
+**Why Cloudflare?**
+- Free unlimited bandwidth
+- Global CDN (faster than GitHub Pages)
+- Better image handling
+- Auto-deployment from GitHub
 
-2. **Initialize Git in your project**
+**Setup:**
+
+1. **Push to GitHub** (first time)
    ```bash
    git init
    git add .
-   git commit -m "Initial portfolio setup"
-   ```
-
-3. **Connect to GitHub**
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/my-portfolio.git
-   git branch -M main
+   git commit -m "Initial commit"
+   git remote add origin https://github.com/Sensibleprat/photo_portfolio.git
    git push -u origin main
    ```
 
-4. **Enable GitHub Pages**
-   - Go to your repo → Settings → Pages
-   - Source: Deploy from a branch
-   - Branch: `main` → `/site` folder
-   - Save
+2. **Connect to Cloudflare Pages**
+   - Go to https://dash.cloudflare.com/pages
+   - Click "Create a project"
+   - Connect your GitHub repo
+   - **Build settings:**
+     - Build command: (leave empty)
+     - Build output directory: `site`
+   - Deploy!
 
-5. **Your site will be live at:**
+3. **Future Updates**
+   ```bash
+   ./deploy.sh  # Syncs from Drive, generates site, pushes to GitHub
+   # Cloudflare auto-deploys in ~30 seconds!
    ```
-   https://YOUR_USERNAME.github.io/my-portfolio/
-   ```
 
-### Updating Your Portfolio (Every Time)
+### Option 2: GitHub Pages
 
-Just run this one command:
+Follow the same GitHub setup, then:
+- Go to repo Settings → Pages
+- Source: Deploy from branch
+- Branch: `main` → `/site` folder
+- Save
 
-```bash
-./deploy.sh
-```
-
-This script will:
-1. Optimize your images
-2. Generate the website
-3. Commit changes
-4. Push to GitHub
-5. Your site updates automatically! 🎉
+Site live at: `https://Sensibleprat.github.io/photo_portfolio/`
 
 ## 🎨 Customization
 
-### Change Site Title & Author
-
-Edit `site/index.html`:
+### Change Your Name
+Edit [`index.html`](file:///Users/prathampunj/Desktop/Weekend%20Projects/portfolio_struct/index.html#L18-L19):
 ```html
-<title>Your Name's Portfolio</title>
 <h3>Your Name</h3>
 <p>@YourHandle</p>
 ```
 
 ### Modify Styles
+Edit [`style.css`](file:///Users/prathampunj/Desktop/Weekend%20Projects/portfolio_struct/style.css) for colors, fonts, layout.
 
-Edit `site/style.css` to customize colors, fonts, layout, etc.
+### Enable Image Optimization
+If you want to reduce file sizes:
 
-### Add Profile Picture
-
-Replace the `.profile-image` background in `site/style.css`:
-```css
-.profile-image {
-    background-image: url('your-photo.jpg');
-}
-```
-
-## 🔧 How It Works
-
-1. **`generate_site.py`** - Scans `photos/` folder structure and creates `data.json`
-2. **`optimize_images.py`** - Compresses and resizes images for web
-3. **`index.html` + `script.js`** - Reads `data.json` and renders gallery dynamically
-4. **GitHub Pages** - Serves your static site for free
-
-## 📝 Image Optimization
-
-The `optimize_images.py` script:
-- Resizes large images to max 2000px (configurable)
-- Compresses JPEGs to 85% quality
-- Creates web-optimized versions
-- Preserves originals in `photos/`
-
-To adjust settings, edit the script variables:
+Edit [`optimize_images.py`](file:///Users/prathampunj/Desktop/Weekend%20Projects/portfolio_struct/optimize_images.py#L16):
 ```python
-MAX_WIDTH = 2000
-MAX_HEIGHT = 2000
-JPEG_QUALITY = 85
+ENABLE_OPTIMIZATION = True
+JPEG_QUALITY = 95  # 95% quality (minimal loss)
+MAX_WIDTH = 4000   # Max dimension
 ```
+
+## 🔄 Workflow
+
+### Adding New Photos
+
+1. **Add to Google Drive** - Upload to your category folders
+2. **Run deployment script:**
+   ```bash
+   ./deploy.sh
+   ```
+3. **Done!** Site updates automatically
+
+That's it! One command does everything.
+
+## ⚙️ Configuration
+
+### Google Drive Folder ID
+
+In [`sync_from_drive.py`](file:///Users/prathampunj/Desktop/Weekend%20Projects/portfolio_struct/sync_from_drive.py#L12):
+```python
+PARENT_FOLDER_ID = 'YOUR_FOLDER_ID_HERE'
+```
+
+To find your folder ID:
+1. Open folder in Google Drive
+2. URL: `https://drive.google.com/drive/folders/FOLDER_ID`
+3. Copy the `FOLDER_ID` part
+
+### Image Quality Settings
+
+All in [`optimize_images.py`](file:///Users/prathampunj/Desktop/Weekend%20Projects/portfolio_struct/optimize_images.py#L11-L21):
+- `ENABLE_OPTIMIZATION`: True/False
+- `JPEG_QUALITY`: 1-100 (95 recommended if optimizing)
+- `MAX_WIDTH/HEIGHT`: Max dimensions
+- `PRESERVE_FORMAT`: Keep PNG as PNG, etc.
 
 ## 🐛 Troubleshooting
 
+**"No module named 'PIL'" error?**
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Google Drive sync fails?**
+- Check `credentials.json` exists in `old_google_drive_version/`
+- Verify folder ID is correct
+- Ensure service account has access to the folder
+
 **Images not showing?**
-- Check that image files are in supported formats (jpg, png, heic, etc.)
 - Run `python generate_site.py` again
 - Check browser console for errors
+- Verify `data.json` was created in `site/`
 
-**Site not updating on GitHub?**
-- Verify GitHub Pages is enabled in repo settings
-- Check that you're pushing to the correct branch
-- GitHub Pages can take 1-2 minutes to rebuild
+**Deployment fails?**
+```bash
+git remote -v  # Check remote is set
+git remote add origin https://github.com/USERNAME/REPO.git
+```
 
-**Script errors?**
-- Ensure Python 3.7+ is installed: `python --version`
-- Install dependencies: `pip install -r requirements.txt`
+## 📊 Comparison: This vs Original
 
-## 📜 License
+| Feature | Google Drive API | New Hybrid |
+|---------|------------------|------------|
+| **Storage** | Google Drive | Google Drive |
+| **Hosting** | GitHub Pages | Cloudflare Pages |
+| **Image Quality** | ❌ Compressed | ✅ Full quality |
+| **Rate Limits** | ❌ Yes (500/day) | ✅ No |
+| **Speed** | Slow | Fast (CDN) |
+| **Workflow** | Complex | One command |
+| **Laptop Always On?** | No | No |
 
-Free to use and modify for personal or commercial projects.
+## 📝 License
 
-## 🤝 Contributing
-
-This is a personal portfolio template, but feel free to fork and enhance it!
+Free to use for personal or commercial projects.
 
 ---
 
-**Built with ❤️ for photographers who hate manual website updates**
+**Built for photographers who want beautiful portfolios without compromising quality!** 📸
