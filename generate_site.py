@@ -42,8 +42,9 @@ def scan_photos():
             if os.path.isfile(file_path):
                 ext = os.path.splitext(file.lower())[1]
                 if ext in SUPPORTED_FORMATS:
-                    # Store relative path from site directory
-                    relative_path = f"../{PHOTOS_DIR}/{category}/{file}"
+                    # Store relative path within site directory
+                    # Images will be copied to site/images/
+                    relative_path = f"images/{category}/{file}"
                     images.append({
                         "name": file,
                         "path": relative_path
@@ -86,6 +87,43 @@ def copy_frontend_files():
             print(f"   ✓ {file}")
         else:
             print(f"   ⚠️  {file} not found - skipping")
+
+def copy_images():
+    """Copy optimized images to site/images/ directory"""
+    images_dir = os.path.join(SITE_DIR, 'images')
+    
+    print("\n📸 Copying Images to Site...")
+    
+    if not os.path.exists(PHOTOS_DIR):
+        print(f"   ⚠️  {PHOTOS_DIR}/ not found - skipping")
+        return
+    
+    # Create images directory
+    os.makedirs(images_dir, exist_ok=True)
+    
+    total_copied = 0
+    
+    # Copy all category folders
+    for category in os.listdir(PHOTOS_DIR):
+        category_src = os.path.join(PHOTOS_DIR, category)
+        
+        if not os.path.isdir(category_src):
+            continue
+        
+        category_dest = os.path.join(images_dir, category)
+        
+        # Copy entire category folder
+        if os.path.exists(category_dest):
+            shutil.rmtree(category_dest)
+        shutil.copytree(category_src, category_dest)
+        
+        # Count images
+        images = [f for f in os.listdir(category_dest) 
+                 if os.path.splitext(f.lower())[1] in SUPPORTED_FORMATS]
+        total_copied += len(images)
+        print(f"   ✓ {category}: {len(images)} images")
+    
+    print(f"\n   Total: {total_copied} images copied to site/")
 
 def create_gitignore():
     """Create .gitignore for the project"""
@@ -145,6 +183,9 @@ def main():
     
     # Copy frontend files
     copy_frontend_files()
+    
+    # Copy images to site directory
+    copy_images()
     
     # Create .gitignore
     create_gitignore()
