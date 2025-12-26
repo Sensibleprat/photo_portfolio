@@ -12,7 +12,7 @@ from pathlib import Path
 # Configuration
 PHOTOS_DIR = "optimized"  # Use optimized images
 SITE_DIR = "site"
-SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp'}
+SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'}
 
 def scan_photos():
     """Scan photo directories and build portfolio data structure"""
