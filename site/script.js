@@ -102,9 +102,19 @@ function renderGallery(images) {
         img.alt = image.name;
         img.loading = 'lazy'; // Enable lazy loading for performance
 
+        // Open Drive link on click if available
+        if (image.drive_url) {
+            img.style.cursor = 'pointer';
+            img.title = "Click to view in Google Drive";
+        }
+
         // Open full-resolution image in new tab (same path for now)
         item.addEventListener('click', () => {
-            window.open(image.path, '_blank');
+            if (image.drive_url) {
+                window.open(image.drive_url, '_blank');
+            } else {
+                window.open(image.path, '_blank');
+            }
         });
 
         item.appendChild(img);

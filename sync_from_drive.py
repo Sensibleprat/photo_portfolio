@@ -1,11 +1,6 @@
-#!/usr/bin/env python3
-"""
-Google Drive Photo Sync Script
-Downloads photos from Google Drive to local photos/ directory
-"""
-
 import os
 import io
+import json
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
@@ -35,8 +30,9 @@ def get_folders(service, parent_id):
 
 def get_images(service, folder_id):
     """Gets images inside a specific folder."""
+    # Modified to include webViewLink
     query = f"'{folder_id}' in parents and mimeType contains 'image/' and trashed = false"
-    fields = "files(id, name, mimeType)"
+    fields = "files(id, name, mimeType, webViewLink)"
     results = service.files().list(q=query, fields=fields).execute()
     return results.get('files', [])
 
@@ -78,6 +74,9 @@ def sync_photos():
     # Create local photos directory
     os.makedirs(LOCAL_PHOTOS_DIR, exist_ok=True)
     
+    # Link mapping dictionary
+    drive_links = {}
+    
     # Get all category folders
     folders = get_folders(service, PARENT_FOLDER_ID)
     
@@ -106,6 +105,8 @@ def sync_photos():
         for image in images:
             image_name = image['name']
             image_id = image['id']
+            # Store the Drive link
+            drive_links[image_name] = image.get('webViewLink', '')
             
             local_image_path = os.path.join(local_category_path, image_name)
             
@@ -125,6 +126,11 @@ def sync_photos():
         
         print()
     
+    # Save drive links
+    with open('drive_links.json', 'w') as f:
+        json.dump(drive_links, f, indent=4)
+    print(f"✅ Saved drive links to drive_links.json")
+
     print("=" * 50)
     print(f"✅ Sync Complete!")
     print(f"   Downloaded: {total_downloaded} images")
