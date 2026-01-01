@@ -14,7 +14,29 @@ PHOTOS_DIR = "optimized"  # Use optimized images
 SITE_DIR = "site"
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp'}  # Excluding HEIC - converted to JPG
 
-def scan_photos():
+def load_config():
+    """Load user configuration"""
+    config_path = 'config.json'
+    default_config = {
+        "name": "Your Name",
+        "handle": "@YourHandle",
+        "profile_picture": ""
+    }
+    
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            return json.load(f)
+    return default_config
+
+def load_drive_links():
+    """Load Google Drive link mapping"""
+    links_path = 'drive_links.json'
+    if os.path.exists(links_path):
+        with open(links_path, 'r') as f:
+            return json.load(f)
+    return {}
+
+def scan_photos(drive_links):
     """Scan photo directories and build portfolio data structure"""
     portfolio_data = {"tabs": []}
     
@@ -45,9 +67,22 @@ def scan_photos():
                     # Store relative path within site directory
                     # Images will be copied to site/images/
                     relative_path = f"images/{category}/{file}"
+                    
+                    # Original filename logic to match drive_links keys
+                    drive_url = drive_links.get(file, "")
+                    
+                    # If conversion changed extension (HEIC -> jpg), try to find original key
+                    if not drive_url:
+                        base_name = os.path.splitext(file)[0]
+                        for link_name, link_url in drive_links.items():
+                            if os.path.splitext(link_name)[0] == base_name:
+                                drive_url = link_url
+                                break
+                    
                     images.append({
                         "name": file,
-                        "path": relative_path
+                        "path": relative_path,
+                        "drive_url": drive_url
                     })
         
         if images:
@@ -74,13 +109,40 @@ def generate_data_json(portfolio_data):
     
     print(f"✅ Generated: {output_path}")
 
-def copy_frontend_files():
-    """Copy HTML, CSS, JS files to site directory"""
-    files_to_copy = ['index.html', 'style.css', 'script.js']
+def copy_frontend_files(config):
+    """Copy and template HTML, CSS, JS files to site directory"""
+    print("\n📋 Processing Frontend Files...")
     
-    print("\n📋 Copying Frontend Files...")
-    
-    for file in files_to_copy:
+    # Process index.html with config substitutions
+    if os.path.exists('index.html'):
+        with open('index.html', 'r') as f:
+            content = f.read()
+        
+        # Substitute placeholders
+        content = content.replace('Your Name', config.get('name', 'Your Name'))
+        content = content.replace('@YourHandle', config.get('handle', '@YourHandle'))
+        
+        # Handle profile picture
+        profile_pic_filename = config.get('profile_picture')
+        if profile_pic_filename and os.path.exists(f"photos/{profile_pic_filename}"):
+            # Using style injection for background image
+            css_injection = f"""<style>
+                .profile-image {{
+                    background-image: url('images/{profile_pic_filename}');
+                    background-size: cover;
+                    background-position: center;
+                }}
+                .profile-image::before {{ content: none !important; }}
+            </style>
+            </head>"""
+            content = content.replace('</head>', css_injection)
+        
+        with open(os.path.join(SITE_DIR, 'index.html'), 'w') as f:
+            f.write(content)
+        print("   ✓ index.html (customized)")
+
+    # Copy other files directly
+    for file in ['style.css', 'script.js']:
         if os.path.exists(file):
             dest = os.path.join(SITE_DIR, file)
             shutil.copy2(file, dest)
@@ -88,8 +150,8 @@ def copy_frontend_files():
         else:
             print(f"   ⚠️  {file} not found - skipping")
 
-def copy_images():
-    """Copy optimized images to site/images/ directory"""
+def copy_images(config):
+    """Copy optimized images and profile pic to site/images/ directory"""
     images_dir = os.path.join(SITE_DIR, 'images')
     
     print("\n📸 Copying Images to Site...")
@@ -123,6 +185,16 @@ def copy_images():
         total_copied += len(images)
         print(f"   ✓ {category}: {len(images)} images")
     
+    # Copy profile picture
+    profile_pic = config.get('profile_picture')
+    if profile_pic:
+        src = os.path.join('photos', profile_pic)
+        if os.path.exists(src):
+            shutil.copy2(src, os.path.join(images_dir, profile_pic))
+            print(f"   ✓ Profile picture copied: {profile_pic}")
+        else:
+             print(f"   ⚠️ Profile picture not found at: {src}")
+
     print(f"\n   Total: {total_copied} images copied to site/")
 
 def create_gitignore():
@@ -138,6 +210,10 @@ venv/
 # Optimized images (can be regenerated)
 optimized/
 
+# Downloaded photos (synced from Google Drive)
+photos/*
+!photos/README.md
+
 # IDE
 .vscode/
 .idea/
@@ -147,9 +223,20 @@ optimized/
 # OS
 .DS_Store
 Thumbs.db
+.AppleDouble
+.LSOverride
 
 # Old backup
 old_google_drive_version/
+
+# Credentials (NEVER commit these!)
+credentials.json
+token.json
+*.json
+!package.json
+!data.json
+!site/data.json
+!config.json
 """
     
     with open('.gitignore', 'w') as f:
@@ -163,8 +250,13 @@ def main():
     print("=" * 50)
     print()
     
+    # Load Config and Drive Links
+    config = load_config()
+    drive_links = load_drive_links()
+    print(f"👤 Customizing for: {config.get('name')}")
+    
     # Scan photos and build data structure
-    portfolio_data = scan_photos()
+    portfolio_data = scan_photos(drive_links=drive_links)
     
     if not portfolio_data["tabs"]:
         print("\n❌ No photos found!")
@@ -181,11 +273,11 @@ def main():
     # Generate data.json
     generate_data_json(portfolio_data)
     
-    # Copy frontend files
-    copy_frontend_files()
+    # Copy frontend files (with customization)
+    copy_frontend_files(config)
     
     # Copy images to site directory
-    copy_images()
+    copy_images(config)
     
     # Create .gitignore
     create_gitignore()
