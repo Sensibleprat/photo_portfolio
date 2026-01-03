@@ -28,11 +28,14 @@ Thumbs.db
 # Old backup
 old_google_drive_version/
 
-# Credentials (NEVER commit these!)
+# Credentials & Config (NEVER commit these!)
 credentials.json
 token.json
+config.json
 *.json
 !package.json
-!data.json
 !site/data.json
-!config.json
+!config.example.json
+
+# Generated Metadata
+drive_links.json
