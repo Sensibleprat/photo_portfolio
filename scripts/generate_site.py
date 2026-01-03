@@ -141,8 +141,11 @@ def copy_frontend_files(config):
         if insta_url:
              linked_handle = f'<a href="{insta_url}" target="_blank" style="text-decoration: none; color: inherit;">{handle}</a>'
              content = content.replace('@YourHandle', linked_handle)
+             # Also replace standalone URL placeholder for icon
+             content = content.replace('INSTAGRAM_URL_PLACEHOLDER', insta_url)
         else:
              content = content.replace('@YourHandle', handle)
+             content = content.replace('INSTAGRAM_URL_PLACEHOLDER', '#')
         
         # Handle profile picture
         profile_pic_filename = config.get('profile_picture')

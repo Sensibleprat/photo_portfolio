@@ -63,6 +63,20 @@ body {
     line-height: 1;
 }
 
+/* Profile Text Container */
+.profile-text {
+    display: block;
+}
+
+/* Default: Hide icon, show text */
+.mobile-insta-icon {
+    display: none;
+}
+
+.desktop-handle {
+    display: block;
+}
+
 .nav-item {
     padding: 15px 25px;
     display: block;
@@ -167,8 +181,25 @@ body {
         font-size: 1.1em;
     }
 
-    .profile-header p {
-        margin: 0;
+    /* Mobile: Flex the text container to put Name + Icon side-by-side */
+    .profile-text {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Hide text handle on mobile */
+    .desktop-handle {
+        display: none;
+    }
+
+    /* Show icon on mobile */
+    .mobile-insta-icon {
+        display: block;
+        color: #333;
+        margin-left: 8px;
+        /* Space between Name and Icon */
+        line-height: 0;
+        /* Fix SVG alignment */
     }
 
     /* 3. Horizontal Scrollable Navigation */
