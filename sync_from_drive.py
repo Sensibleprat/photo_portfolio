@@ -10,16 +10,25 @@ SERVICE_ACCOUNT_FILE = 'old_google_drive_version/credentials.json'
 LOCAL_PHOTOS_DIR = 'photos'
 
 def load_config():
-    """Load configuration from config.json"""
+    """Load configuration from config.json with strict validation"""
     config_path = 'config.json'
-    if os.path.exists(config_path):
-        with open(config_path, 'r') as f:
-            return json.load(f)
-    return {}
+    if not os.path.exists(config_path):
+        print(f"❌ Error: {config_path} not found!")
+        print("   Please create config.json with your details.")
+        exit(1)
+        
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+        
+    if 'google_drive_folder_id' not in config:
+        print(f"❌ Error: 'google_drive_folder_id' missing in {config_path}")
+        exit(1)
+        
+    return config
 
 # Load parent folder ID from config
 config = load_config()
-PARENT_FOLDER_ID = config.get('google_drive_folder_id', '1KtAZreDObnIKpNf-Z-HYMFIjfiejqRp-') # Default to existing if not found
+PARENT_FOLDER_ID = config['google_drive_folder_id']
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 def authenticate():

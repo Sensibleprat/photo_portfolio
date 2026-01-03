@@ -15,18 +15,28 @@ SITE_DIR = "site"
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp'}  # Excluding HEIC - converted to JPG
 
 def load_config():
-    """Load user configuration"""
+    """Load user configuration with strict validation"""
     config_path = 'config.json'
-    default_config = {
-        "name": "Your Name",
-        "handle": "@YourHandle",
-        "profile_picture": ""
-    }
     
-    if os.path.exists(config_path):
-        with open(config_path, 'r') as f:
-            return json.load(f)
-    return default_config
+    if not os.path.exists(config_path):
+        print(f"❌ Error: {config_path} not found!")
+        print("   Please create config.json with your details.")
+        exit(1)
+        
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+        
+    # Strict validation - ensure required fields exist
+    required_fields = ["name", "handle", "instagram_url"]
+    missing_fields = [field for field in required_fields if field not in config]
+    
+    if missing_fields:
+        print(f"❌ Error: Missing required fields in {config_path}:")
+        for field in missing_fields:
+            print(f"   - {field}")
+        exit(1)
+        
+    return config
 
 def load_drive_links():
     """Load Google Drive link mapping"""
@@ -119,15 +129,17 @@ def copy_frontend_files(config):
             content = f.read()
         
         # Substitute placeholders
-        content = content.replace('Your Name', config.get('name', 'Your Name'))
+        content = content.replace('Your Name', config['name'])
         
-        handle = config.get('handle', '@YourHandle')
-        # Check if it's the specific handle to add the link
-        if handle == '@prat_hmm_':
-            linked_handle = f'<a href="https://www.instagram.com/prat_hmm_/" target="_blank" style="text-decoration: none; color: inherit;">{handle}</a>'
-            content = content.replace('@YourHandle', linked_handle)
+        # Hyperlink the handle using config URL
+        handle = config['handle']
+        insta_url = config['instagram_url']
+        
+        if insta_url:
+             linked_handle = f'<a href="{insta_url}" target="_blank" style="text-decoration: none; color: inherit;">{handle}</a>'
+             content = content.replace('@YourHandle', linked_handle)
         else:
-            content = content.replace('@YourHandle', handle)
+             content = content.replace('@YourHandle', handle)
         
         # Handle profile picture
         profile_pic_filename = config.get('profile_picture')
@@ -149,7 +161,7 @@ def copy_frontend_files(config):
         print("   ✓ index.html (customized)")
 
     # Copy other files directly
-    for file in ['style.css', 'script.js']:
+    for file in ['style.css', 'script.js']:        
         if os.path.exists(file):
             dest = os.path.join(SITE_DIR, file)
             shutil.copy2(file, dest)

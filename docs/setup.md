@@ -45,13 +45,20 @@ Open `config.json` in the project root and update it with your details:
 {
     "name": "Your Name",
     "handle": "@your_instagram_handle",
+    "instagram_url": "https://www.instagram.com/your_handle/",
     "profile_picture": "profile.png",
     "google_drive_folder_id": "YOUR_FOLDER_ID_HERE"
 }
 ```
 
-*   **profile_picture**: Place your profile image (e.g., `profile.png`) inside the `photos/` directory (or let the sync script handle it if you upload it to Drive, but currently it's manually placed/synced).
+*   **name**: Your full name (displayed in sidebar).
+*   **handle**: Your social media handle text.
+*   **instagram_url**: The full URL to your Instagram profile (required).
+*   **profile_picture**: Place your profile image (e.g., `profile.png`) inside the `photos/` directory.
 *   **google_drive_folder_id**: The ID you copied in Step 1.
+
+> [!IMPORTANT]
+> All fields are required. The build scripts will fail if any variable is missing.
 
 ---
 
