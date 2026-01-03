@@ -106,6 +106,16 @@ def scan_photos(drive_links):
         else:
             print(f"      ⚠️  No images found")
     
+    import random
+    
+    # Create a shuffled definition of "All Photos" for the main page
+    all_photos_list = []
+    for tab in portfolio_data["tabs"]:
+        all_photos_list.extend(tab["images"])
+    
+    random.shuffle(all_photos_list)
+    portfolio_data["all_images"] = all_photos_list
+    
     return portfolio_data
 
 def setup_site_directory():

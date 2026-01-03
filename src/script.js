@@ -1,5 +1,9 @@
-// Global variable to hold all portfolio data
+// Global variables
 let portfolioData = {};
+let currentImages = []; // Images for the currently active tab
+let renderedCount = 0;  // How many images are currently shown
+const PAGE_SIZE = 12;   // Number of images to load per batch
+
 const tabsContainer = document.getElementById('tabs-container');
 const galleryContainer = document.getElementById('gallery-container');
 
@@ -14,14 +18,16 @@ async function fetchAndRender() {
 
         // Persistence Logic
         const lastTabName = localStorage.getItem('activeTabCategory') || "ALL PHOTOS";
-        let initialImages = getAllImages(portfolioData.tabs);
 
-        if (lastTabName !== "ALL PHOTOS") {
+        // Use pre-shuffled "all_images" if available, otherwise fallback
+        if (lastTabName === "ALL PHOTOS") {
+            currentImages = portfolioData.all_images || getAllImages(portfolioData.tabs);
+        } else {
             const tab = portfolioData.tabs.find(t => t.category.toUpperCase() === lastTabName);
-            if (tab) initialImages = tab.images;
+            currentImages = tab ? tab.images : [];
         }
 
-        renderGallery(initialImages);
+        renderGallery(true); // true = reset
         setActiveTab(lastTabName);
 
     } catch (error) {
@@ -44,13 +50,8 @@ function setActiveTab(categoryName) {
         item.classList.remove('active');
         if (item.textContent === categoryName) {
             item.classList.add('active');
-
-            // Mobile UX: Scroll active tab into view (horizontal scroll)
-            item.scrollIntoView({
-                behavior: 'smooth',
-                inline: 'center',
-                block: 'nearest'
-            });
+            // Mobile UX: Scroll active tab into view
+            item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
     });
 }
@@ -60,7 +61,8 @@ function setActiveTab(categoryName) {
 function renderTabs(tabs) {
     tabsContainer.innerHTML = '';
 
-    const allImages = getAllImages(tabs);
+    // "All Photos" uses the pre-shuffled list from data.json if available
+    const allImages = portfolioData.all_images || getAllImages(tabs);
     const allTab = createTabElement("ALL PHOTOS", allImages);
     tabsContainer.appendChild(allTab);
 
@@ -76,57 +78,104 @@ function createTabElement(categoryName, images) {
     a.className = 'nav-item';
     a.textContent = categoryName.toUpperCase();
 
-    // Event listener for persistence
     a.addEventListener('click', (e) => {
         e.preventDefault();
-
         localStorage.setItem('activeTabCategory', categoryName.toUpperCase());
         setActiveTab(categoryName.toUpperCase());
-        renderGallery(images);
+
+        // Update current context and reset gallery
+        currentImages = images;
+        renderGallery(true);
     });
 
     return a;
 }
 
-// --- 3. Gallery Rendering ---
+// --- 3. Gallery Rendering & Pagination ---
 
-function renderGallery(images) {
-    galleryContainer.innerHTML = '';
+function renderGallery(reset = false) {
+    // If resetting, clear container and counters
+    if (reset) {
+        galleryContainer.innerHTML = '';
+        renderedCount = 0;
 
-    if (images.length === 0) {
+        // Remove existing "Load More" button if any
+        const existingBtn = document.getElementById('load-more-btn');
+        if (existingBtn) existingBtn.remove();
+    }
+
+    if (currentImages.length === 0) {
         galleryContainer.innerHTML = '<div id="loading-message">No photos found in this category.</div>';
         return;
     }
 
-    images.forEach(image => {
+    // Determine slice range
+    const start = renderedCount;
+    const end = Math.min(renderedCount + PAGE_SIZE, currentImages.length);
+    const batch = currentImages.slice(start, end);
+
+    // Render batch
+    batch.forEach(image => {
         const item = document.createElement('div');
         item.className = 'gallery-item';
 
         const img = document.createElement('img');
-
-        // Use local path instead of Google Drive link
         img.src = image.path;
         img.alt = image.name;
-        img.loading = 'lazy'; // Enable lazy loading for performance
+        img.loading = 'lazy';
 
-        // Open Drive link on click if available
         if (image.drive_url) {
             img.style.cursor = 'pointer';
             img.title = "Click to view in Google Drive";
         }
 
-        // Open full-resolution image in new tab (same path for now)
         item.addEventListener('click', () => {
-            if (image.drive_url) {
-                window.open(image.drive_url, '_blank');
-            } else {
-                window.open(image.path, '_blank');
-            }
+            const url = image.drive_url || image.path;
+            window.open(url, '_blank');
         });
 
         item.appendChild(img);
         galleryContainer.appendChild(item);
     });
+
+    renderedCount = end;
+
+    // Manage "Load More" Button
+    updateLoadMoreButton();
+}
+
+function updateLoadMoreButton() {
+    // Try to find helper container or create one
+    let btnContainer = document.getElementById('pagination-container');
+    if (!btnContainer) {
+        btnContainer = document.createElement('div');
+        btnContainer.id = 'pagination-container';
+        btnContainer.style.textAlign = 'center';
+        btnContainer.style.padding = '20px';
+        // Insert after gallery container
+        galleryContainer.parentNode.insertBefore(btnContainer, galleryContainer.nextSibling);
+    }
+
+    btnContainer.innerHTML = ''; // Clear
+
+    if (renderedCount < currentImages.length) {
+        const btn = document.createElement('button');
+        btn.textContent = 'LOAD MORE';
+        btn.style.padding = '12px 30px';
+        btn.style.fontSize = '14px';
+        btn.style.letterSpacing = '1px';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#333';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '4px';
+
+        btn.addEventListener('click', () => {
+            renderGallery(false);
+        });
+
+        btnContainer.appendChild(btn);
+    }
 }
 
 
