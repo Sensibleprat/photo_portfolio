@@ -35,7 +35,12 @@ This document tracks the evolution of the project, including key decisions, chan
 *   **Issue**: iPhone photos (HEIC) were not displaying in browsers.
 *   **Fix**: Added `pillow-heif` to `optimize_images.py` to auto-convert HEIC to JPG.
 *   **Refactor**: Extracted user details (Name, Handle, Drive ID) into `config.json` to make the project re-usable for others.
-*   **Feature**: Added "Deep Linking" - clicking an image now opens the original Google Drive file (fetched via API metadata).
+### Phase 4: Experience Refinement (Pagination & Randomization)
+*   **Performance**: Implemented "Load More" pagination (12 images/batch) to fix slow initial loads on large galleries.
+*   **Variety**: Added *Build-Time Randomization* for the "All Photos" tab.
+    *   *Why Build-Time?* Client-side shuffling hurts performance and layout stability.
+    *   *How?* `generate_site.py` shuffles the master list and saves it to `data.json`. The order changes only on deployment, keeping the site fast and fresh.
+*   **Mobile Polish**: Replaced text handles with icons on mobile and removed redundant headers for a cleaner, app-like feel.
 
 ---
 

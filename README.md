@@ -5,8 +5,9 @@ A minimal, high-performance photography portfolio website that syncs dynamically
 ## ✨ Features
 -   **Google Drive Sync**: Manage your photos in Drive; they appear on your site.
 -   **Auto-Optimization**: Automatically converts HEIC to JPG and optimizes for web.
--   **Category Support**: Simply create folders in Drive (e.g., "Nature", "Urban") to create tabs.
--   **Blazing Fast**: Static site generation means 100/100 performance.
+-   **Folder-based Organization**: Simply create folders in Drive (e.g., "Nature", "Urban") to create tabs.
+-   **Blazing Fast**: Static site generation + 12-item pagination ("Load More") ensures instant loading.
+-   **Smart Randomization**: The "All Photos" tab is shuffled at build-time to show a fresh mix of your work.
 -   **Deep Linking**: Click any photo to see the full-quality original in Drive.
 
 ## 🚀 Getting Started
