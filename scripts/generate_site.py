@@ -146,7 +146,9 @@ def copy_frontend_files(config):
         
         # Handle profile picture
         profile_pic_filename = config.get('profile_picture')
-        if profile_pic_filename and os.path.exists(f"../photos/{profile_pic_filename}"):
+        profile_pic_path = os.path.join(BASE_DIR, 'photos', profile_pic_filename) if profile_pic_filename else None
+        
+        if profile_pic_path and os.path.exists(profile_pic_path):
             # Using style injection for background image
             css_injection = f"""<style>
                 .profile-image {{
@@ -211,7 +213,7 @@ def copy_images(config):
     # Copy profile picture
     profile_pic = config.get('profile_picture')
     if profile_pic:
-        src = os.path.join('../photos', profile_pic)
+        src = os.path.join(BASE_DIR, 'photos', profile_pic)
         if os.path.exists(src):
             shutil.copy2(src, os.path.join(images_dir, profile_pic))
             print(f"   ✓ Profile picture copied: {profile_pic}")
