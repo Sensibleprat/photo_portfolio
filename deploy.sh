@@ -17,9 +17,9 @@ if [ -d ".venv" ]; then
     echo ""
 fi
 
-# Step# 2. Sync from Drive (Optional - uncomment if needed)
-# echo "🔄 Syncing from Google Drive..."
-# python scripts/sync_from_drive.py
+# Step 2. Sync from Drive
+echo "🔄 Syncing from Google Drive..."
+python scripts/sync_from_drive.py
 
 # 3. Optimize Images
 echo "🖼️  Optimizing images..."
