@@ -39,7 +39,14 @@ You need to enable the Drive API to allow the script to download your photos.
 
 ## ⚙️ Step 2: Configuration
 
-Open `config.json` in the project root and update it with your details:
+1.  **Create Config File**:
+    Copy the example configuration file to `config.json` (which is git-ignored to keep your details private).
+    ```bash
+    cp config.example.json config.json
+    ```
+
+2.  **Edit details**:
+    Open `config.json` and update it with your details:
 
 ```json
 {
