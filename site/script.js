@@ -44,6 +44,13 @@ function setActiveTab(categoryName) {
         item.classList.remove('active');
         if (item.textContent === categoryName) {
             item.classList.add('active');
+
+            // Mobile UX: Scroll active tab into view (horizontal scroll)
+            item.scrollIntoView({
+                behavior: 'smooth',
+                inline: 'center',
+                block: 'nearest'
+            });
         }
     });
 }

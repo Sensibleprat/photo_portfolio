@@ -6,8 +6,10 @@
 }
 
 /* Fix for consistent layout */
-*, *::before, *::after {
-    box-sizing: border-box; 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 /* Reset and Global Styles */
@@ -17,7 +19,8 @@ body {
     padding: 0;
     background-color: var(--light-color);
     color: var(--text-color);
-    display: flex; /* Key to the layout */
+    display: flex;
+    /* Key to the layout */
     min-height: 100vh;
 }
 
@@ -26,7 +29,8 @@ body {
     width: var(--sidebar-width);
     background-color: #ffffff;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
-    position: fixed; /* Fixed position */
+    position: fixed;
+    /* Fixed position */
     height: 100%;
     padding: 20px 0;
     overflow-y: auto;
@@ -43,7 +47,8 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: var(--dark-color); /* Placeholder for your image */
+    background-color: var(--dark-color);
+    /* Placeholder for your image */
     margin: 0 auto 10px;
     display: flex;
     justify-content: center;
@@ -51,15 +56,17 @@ body {
 }
 
 .profile-image::before {
-    content: "PP"; /* Placeholder initials */
+    content: "PP";
+    /* Placeholder initials */
     color: white;
     font-size: 1.5em;
-    line-height: 1; 
+    line-height: 1;
 }
 
 .nav-item {
     padding: 15px 25px;
-    display: block; /* Fix for clickable area */
+    display: block;
+    /* Fix for clickable area */
     text-decoration: none;
     color: var(--text-color);
     font-size: 0.9em;
@@ -79,7 +86,8 @@ body {
 
 /* --- Main Content and Gallery --- */
 .main-content {
-    margin-left: var(--sidebar-width); /* Push content over */
+    margin-left: var(--sidebar-width);
+    /* Push content over */
     flex-grow: 1;
     padding: 40px;
 }
@@ -93,7 +101,8 @@ body {
 
 .gallery-item {
     margin-bottom: 10px;
-    break-inside: avoid-column; /* Crucial for grid */
+    break-inside: avoid-column;
+    /* Crucial for grid */
     overflow: hidden;
 }
 
@@ -115,4 +124,112 @@ body {
     font-size: 1.2em;
     padding: 50px;
     color: #999;
+}
+
+/* =========================================
+   Mobile Responsiveness (Max Width: 768px)
+   ========================================= */
+@media (max-width: 768px) {
+
+    /* 1. Layout Shift: Sidebar becomes Header */
+    body {
+        flex-direction: column;
+        /* Stack vertically */
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        /* No longer fixed side */
+        padding: 15px 0 0 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+    }
+
+    /* 2. Compact Profile Header */
+    .profile-header {
+        display: flex;
+        align-items: center;
+        padding: 0 20px 15px;
+        text-align: left;
+    }
+
+    .profile-image {
+        margin: 0 15px 0 0;
+        /* Move to side of text */
+        width: 50px;
+        height: 50px;
+    }
+
+    .profile-header h3 {
+        margin: 0;
+        font-size: 1.1em;
+    }
+
+    .profile-header p {
+        margin: 0;
+    }
+
+    /* 3. Horizontal Scrollable Navigation */
+    #tabs-container {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 0 10px;
+        /* Hide scrollbar for cleaner look */
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        /* Firefox */
+    }
+
+    #tabs-container::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari */
+    }
+
+    .nav-item {
+        padding: 15px 20px;
+        border-bottom: 3px solid transparent;
+        /* Tab indicator style */
+        background: transparent;
+    }
+
+    .nav-item:hover {
+        background-color: transparent;
+        color: var(--dark-color);
+    }
+
+    .nav-item.active {
+        background-color: transparent;
+        color: var(--dark-color);
+        border-bottom-color: var(--dark-color);
+    }
+
+    /* 4. Content Adjustment */
+    .main-content {
+        margin-left: 0;
+        /* Reset margin */
+        padding: 20px;
+        width: 100%;
+    }
+
+    /* 5. Gallery Columns */
+    .gallery-container {
+        column-count: 2;
+        /* 2 columns on mobile looks good */
+        column-gap: 8px;
+    }
+
+    .gallery-item {
+        margin-bottom: 8px;
+    }
+}
+
+/* Extra Small Screens (Phones < 480px) */
+@media (max-width: 480px) {
+    .gallery-container {
+        column-count: 1;
+        /* Full width for very small screens */
+    }
 }
