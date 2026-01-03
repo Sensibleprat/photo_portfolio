@@ -10,13 +10,15 @@ import shutil
 from pathlib import Path
 
 # Configuration
-PHOTOS_DIR = "optimized"  # Use optimized images
-SITE_DIR = "site"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PHOTOS_DIR = os.path.join(BASE_DIR, 'optimized')  # Use optimized images
+SITE_DIR = os.path.join(BASE_DIR, 'site')
+SRC_DIR = os.path.join(BASE_DIR, 'src')
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp'}  # Excluding HEIC - converted to JPG
 
 def load_config():
     """Load user configuration with strict validation"""
-    config_path = 'config.json'
+    config_path = os.path.join(BASE_DIR, 'config.json')
     
     if not os.path.exists(config_path):
         print(f"❌ Error: {config_path} not found!")
@@ -40,7 +42,7 @@ def load_config():
 
 def load_drive_links():
     """Load Google Drive link mapping"""
-    links_path = 'drive_links.json'
+    links_path = os.path.join(BASE_DIR, 'drive_links.json')
     if os.path.exists(links_path):
         with open(links_path, 'r') as f:
             return json.load(f)
@@ -124,8 +126,9 @@ def copy_frontend_files(config):
     print("\n📋 Processing Frontend Files...")
     
     # Process index.html with config substitutions
-    if os.path.exists('index.html'):
-        with open('index.html', 'r') as f:
+    index_path = os.path.join(SRC_DIR, 'index.html')
+    if os.path.exists(index_path):
+        with open(index_path, 'r') as f:
             content = f.read()
         
         # Substitute placeholders
@@ -143,7 +146,7 @@ def copy_frontend_files(config):
         
         # Handle profile picture
         profile_pic_filename = config.get('profile_picture')
-        if profile_pic_filename and os.path.exists(f"photos/{profile_pic_filename}"):
+        if profile_pic_filename and os.path.exists(f"../photos/{profile_pic_filename}"):
             # Using style injection for background image
             css_injection = f"""<style>
                 .profile-image {{
@@ -161,10 +164,11 @@ def copy_frontend_files(config):
         print("   ✓ index.html (customized)")
 
     # Copy other files directly
-    for file in ['style.css', 'script.js']:        
-        if os.path.exists(file):
+    for file in ['style.css', 'script.js']:
+        src_file = os.path.join(SRC_DIR, file)
+        if os.path.exists(src_file):
             dest = os.path.join(SITE_DIR, file)
-            shutil.copy2(file, dest)
+            shutil.copy2(src_file, dest)
             print(f"   ✓ {file}")
         else:
             print(f"   ⚠️  {file} not found - skipping")
@@ -207,7 +211,7 @@ def copy_images(config):
     # Copy profile picture
     profile_pic = config.get('profile_picture')
     if profile_pic:
-        src = os.path.join('photos', profile_pic)
+        src = os.path.join('../photos', profile_pic)
         if os.path.exists(src):
             shutil.copy2(src, os.path.join(images_dir, profile_pic))
             print(f"   ✓ Profile picture copied: {profile_pic}")

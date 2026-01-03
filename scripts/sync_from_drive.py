@@ -6,12 +6,13 @@ from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
 
 # Configuration
-SERVICE_ACCOUNT_FILE = 'credentials.json'
-LOCAL_PHOTOS_DIR = 'photos'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, 'credentials.json')
+LOCAL_PHOTOS_DIR = os.path.join(BASE_DIR, 'photos')
 
 def load_config():
     """Load configuration from config.json with strict validation"""
-    config_path = 'config.json'
+    config_path = os.path.join(BASE_DIR, 'config.json')
     if not os.path.exists(config_path):
         print(f"❌ Error: {config_path} not found!")
         print("   Please create config.json with your details.")

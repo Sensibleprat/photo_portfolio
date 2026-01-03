@@ -35,5 +35,4 @@ token.json
 !package.json
 !data.json
 !site/data.json
-!config.example.json
-config.json
+!config.json

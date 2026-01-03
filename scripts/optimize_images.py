@@ -13,8 +13,9 @@ import pillow_heif
 pillow_heif.register_heif_opener()
 
 # Configuration
-SOURCE_DIR = "photos"
-OUTPUT_DIR = "optimized"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+INPUT_DIR = os.path.join(BASE_DIR, 'photos')
+OUTPUT_DIR = os.path.join(BASE_DIR, 'optimized')
 
 # Image Quality Settings
 ENABLE_OPTIMIZATION = True   # Enable to convert HEIC → JPG for browsers
@@ -88,17 +89,22 @@ def optimize_image(input_path, output_path):
 
 def process_all_images():
     """Process all images in the photos directory"""
-    if not os.path.exists(SOURCE_DIR):
-        print(f"❌ Error: '{SOURCE_DIR}' directory not found!")
-        print(f"   Run 'python sync_from_drive.py' first to download photos from Google Drive.")
-        return
-    
-    setup_directories()
-    
+
     mode_text = "Copying Images (Full Quality)" if not ENABLE_OPTIMIZATION else "Optimizing Images"
-    print(f"🎨 {mode_text}...")
-    print(f"   Source: {SOURCE_DIR}/")
-    print(f"   Output: {OUTPUT_DIR}/")
+    print(f"🚀 Starting image optimization...")
+    print(f"   Input:  {INPUT_DIR}")
+    print(f"   Output: {OUTPUT_DIR}")
+    
+    if not os.path.exists(INPUT_DIR):
+        print(f"❌ Error: Input directory '{INPUT_DIR}' not found!")
+        print(f"   Please run 'python scripts/sync_from_drive.py' first.")
+        return
+
+    # Create output directory
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    total_images = 0
+    
     if ENABLE_OPTIMIZATION:
         print(f"   Quality: {JPEG_QUALITY}%")
         print(f"   Max Size: {MAX_WIDTH}x{MAX_HEIGHT}px")
@@ -109,9 +115,9 @@ def process_all_images():
     total_processed = 0
     total_skipped = 0
     
-    # Walk through all categories
-    for category in sorted(os.listdir(SOURCE_DIR)):
-        category_path = os.path.join(SOURCE_DIR, category)
+    # Process each category folder
+    for category in sorted(os.listdir(INPUT_DIR)):
+        category_path = os.path.join(INPUT_DIR, category)
         
         if not os.path.isdir(category_path):
             continue

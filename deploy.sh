@@ -17,19 +17,17 @@ if [ -d ".venv" ]; then
     echo ""
 fi
 
-# Step 1: Sync from Google Drive
-echo "📥 Step 1/5: Syncing photos from Google Drive..."
-python3 sync_from_drive.py
-echo ""
+# Step# 2. Sync from Drive (Optional - uncomment if needed)
+# echo "🔄 Syncing from Google Drive..."
+# python scripts/sync_from_drive.py
 
-# Step 2: Process Images
-echo "📸 Step 2/5: Processing images..."
-python3 optimize_images.py
-echo ""
+# 3. Optimize Images
+echo "🖼️  Optimizing images..."
+python scripts/optimize_images.py
 
-# Step 3: Generate Site
-echo "🏗️  Step 3/5: Generating website..."
-python3 generate_site.py
+# 4. Generate Site
+echo "🏗️  Building site..."
+python scripts/generate_site.py
 echo ""
 
 # Step 4: Git Add & Commit
