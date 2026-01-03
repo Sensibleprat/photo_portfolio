@@ -120,7 +120,14 @@ def copy_frontend_files(config):
         
         # Substitute placeholders
         content = content.replace('Your Name', config.get('name', 'Your Name'))
-        content = content.replace('@YourHandle', config.get('handle', '@YourHandle'))
+        
+        handle = config.get('handle', '@YourHandle')
+        # Check if it's the specific handle to add the link
+        if handle == '@prat_hmm_':
+            linked_handle = f'<a href="https://www.instagram.com/prat_hmm_/" target="_blank" style="text-decoration: none; color: inherit;">{handle}</a>'
+            content = content.replace('@YourHandle', linked_handle)
+        else:
+            content = content.replace('@YourHandle', handle)
         
         # Handle profile picture
         profile_pic_filename = config.get('profile_picture')
