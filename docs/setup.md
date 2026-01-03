@@ -138,7 +138,8 @@ You need to enable the Drive API to allow the script to download your photos.
     ```bash
     ./deploy.sh
     ```
-    *(This script automates sync, generation, and git push)*.
+    *(This script automates the entire pipeline: Sync -> Optimize -> Generate -> Push)*.
+    *   **Note**: This script will download new photos to `photos/` automatically. You do NOT need to run the sync script manually.
 
 ---
 

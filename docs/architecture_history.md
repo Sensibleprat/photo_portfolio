@@ -28,7 +28,7 @@ This document tracks the evolution of the project, including key decisions, chan
 *   **Solution**: Moved image fetching to a "build step" (Python script).
 *   **Key Decisions**:
     *   **Sync Script**: Downloads photos locally first. Solves rate limits since we only sync when developing.
-    *   **Image Storage**: We do **not** commit the `photos/` (raw) or `optimized/` (processed) folders to GitHub to avoid repo size limits. We only commit the final `site/` folder.
+    *   **Image Storage**: We do **not** commit the `photos/` (raw) or `optimized/` (processed) folders to GitHub to avoid repo size limits. We only commit the final `site/` folder. The `photos/` folder is now ephemeral—it is re-downloaded from Drive by `sync_from_drive.py` if missing.
     *   **Hosting Switch**: Switched to Cloudflare Pages for better performance and easier "Git-hook" deployments compared to manual FTP/hosting.
 
 ### Phase 3: HEIC Support & Customization

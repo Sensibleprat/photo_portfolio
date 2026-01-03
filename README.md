@@ -20,11 +20,17 @@ Please see the [Setup Guide](docs/setup.md) for complete instructions.
 
 ## 🛠 Quick Update
 
-If you already have it set up and just added new photos:
+If you have added new photos to Google Drive:
 
 ```bash
 ./deploy.sh
 ```
+
+This command will:
+1. **Sync** new photos from Google Drive.
+2. **Optimize** them for the web.
+3. **Generate** the site.
+4. **Deploy** to Cloudflare Pages.
 
 ---
 *Created by [Sensibleprat](https://github.com/Sensibleprat)*

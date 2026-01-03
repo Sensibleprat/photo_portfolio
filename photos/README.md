@@ -37,6 +37,7 @@ This is where you organize your photography portfolio!
 - **Folder names** become tab names (e.g., "Nature", "Street Photography")
 - Use descriptive names for better organization
 - Supported formats: JPG, PNG, HEIC, WebP
+- **Note**: This folder is `gitignored`. The photos here are downloaded from your Google Drive when you run `./deploy.sh` (or `python scripts/sync_from_drive.py`).
 - Original photos stay here; optimized versions go to `optimized/`
 
 ## Example Structure
