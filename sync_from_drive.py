@@ -6,10 +6,21 @@ from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
 
 # Configuration
-PARENT_FOLDER_ID = '1KtAZreDObnIKpNf-Z-HYMFIjfiejqRp-'  # Your Google Drive folder ID
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 SERVICE_ACCOUNT_FILE = 'old_google_drive_version/credentials.json'
 LOCAL_PHOTOS_DIR = 'photos'
+
+def load_config():
+    """Load configuration from config.json"""
+    config_path = 'config.json'
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            return json.load(f)
+    return {}
+
+# Load parent folder ID from config
+config = load_config()
+PARENT_FOLDER_ID = config.get('google_drive_folder_id', '1KtAZreDObnIKpNf-Z-HYMFIjfiejqRp-') # Default to existing if not found
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 def authenticate():
     """Authenticates using the Service Account."""
