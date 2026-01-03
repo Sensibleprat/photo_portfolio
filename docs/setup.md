@@ -88,15 +88,15 @@ You need to enable the Drive API to allow the script to download your photos.
 3.  **Sync Photos**:
     Run the sync script to grab photos and links from Drive:
     ```bash
-    python sync_from_drive.py
+    python scripts/sync_from_drive.py
     ```
     *(This creates `drive_links.json` which maps images to their Drive URLs)*.
 
 4.  **Generate Site**:
     Process images (convert HEIC to JPG) and build the site:
     ```bash
-    python optimize_images.py
-    python generate_site.py
+    python scripts/optimize_images.py
+    python scripts/generate_site.py
     ```
 
 5.  **Preview**:

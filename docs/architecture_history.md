@@ -10,9 +10,9 @@ This document tracks the evolution of the project, including key decisions, chan
 *   **Version Control**: GitHub (Stores code + generated static assets).
 
 ### Workflow
-1.  **Sync**: `sync_from_drive.py` downloads structure/images from Drive using Service Account.
-2.  **Optimize**: `optimize_images.py` converts HEIC -> JPG (95% quality) and resizes if needed.
-3.  **Generate**: `generate_site.py` builds `data.json`, copies assets, and injects config (Name, Handle).
+1.  **Sync**: `scripts/sync_from_drive.py` downloads structure/images from Drive using Service Account.
+2.  **Optimize**: `scripts/optimize_images.py` converts HEIC -> JPG (95% quality) and resizes if needed.
+3.  **Generate**: `scripts/generate_site.py` builds `data.json`, copies assets, and injects config (Name, Handle).
 4.  **Deploy**: Git Push triggers Cloudflare deployment.
 
 ---
@@ -42,8 +42,10 @@ This document tracks the evolution of the project, including key decisions, chan
 ## 📂 File Structure Explanation
 
 *   `docs/`: Documentation (You are here).
+*   `src/`: Frontend source code (`index.html`, `style.css`, `script.js`).
+*   `scripts/`: Python build tools (`sync_from_drive.py`, `optimize_images.py`, `generate_site.py`).
 *   `site/`: The actual website (HTML/CSS/JS + processed images). This is what gets deployed.
 *   `photos/`: Local cache of raw images from Drive (GitIgnored).
 *   `optimized/`: Intermediate processed images (GitIgnored).
-*   `sys_scripts`: (files like `sync_from_drive.py`, `generate_site.py`).
-*   `config.json`: User settings.
+*   `config.json`: User settings (GitIgnored).
+*   `config.example.json`: Template for user settings.
