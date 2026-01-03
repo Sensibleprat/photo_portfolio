@@ -6,7 +6,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
 
 # Configuration
-SERVICE_ACCOUNT_FILE = 'old_google_drive_version/credentials.json'
+SERVICE_ACCOUNT_FILE = 'credentials.json'
 LOCAL_PHOTOS_DIR = 'photos'
 
 def load_config():

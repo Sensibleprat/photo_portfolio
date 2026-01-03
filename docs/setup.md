@@ -22,8 +22,8 @@ You need to enable the Drive API to allow the script to download your photos.
     -   Go to **IAM & Admin** > **Service Accounts**.
     -   Create a new service account.
     -   Create a new **Key** (JSON type).
-    -   Download the JSON file and save it as `credentials.json` inside a folder named `old_google_drive_version/` (or strictly in a secure location, ensuring the script points to it).
-    -   *(Note: The current script expects it at `old_google_drive_version/credentials.json`)*.
+    -   Download the JSON file and save it as `credentials.json` in the root of your project directory.
+    -   *(Note: The script expects it at `./credentials.json`)*.
 4.  **Organize Photos**:
     -   Create a main folder in Google Drive (e.g., "Portfolio").
     -   Inside it, create subfolders for your categories (e.g., "Nature", "Street", "Travel").
@@ -45,7 +45,7 @@ Open `config.json` in the project root and update it with your details:
 {
     "name": "Your Name",
     "handle": "@your_instagram_handle",
-    "instagram_url": "https://www.instagram.com/your_handle/",
+    "instagram_url": "https://www.instagram.com/<your_handle>/",
     "profile_picture": "profile.png",
     "google_drive_folder_id": "YOUR_FOLDER_ID_HERE"
 }
