@@ -1,149 +1,43 @@
-# Portfolio Setup Guide
+# Photofolio: The Architect's Setup Guide
 
-This guide will help you set up your own photography portfolio using Google Drive and Cloudflare Pages.
+Welcome to Photofolio. This system is designed to provide you with a high-performance, ultra-fast photography portfolio with **zero maintenance**. 
 
-## 🛠 Prerequisites
+As an engineer, you know that the best tools fade into the background. Instead of building a complex, custom Content Management System (CMS) with a database, authentication, and an admin dashboard, this architecture leverages the tools you already use daily: **Google Drive**.
 
--   **Python 3.8+** installed on your machine.
--   **Git** installed.
--   A **Google Cloud Platform** project (for Drive API).
--   A **Cloudflare** account (free tier is fine).
--   A **GitHub** account.
-
----
-
-## 🚀 Step 1: Google Drive Setup
-
-You need to enable the Drive API to allow the script to download your photos.
-
-1.  **Create a Project** in [Google Cloud Console](https://console.cloud.google.com/).
-2.  Enable the **Google Drive API**.
-3.  Create a **Service Account**:
-    -   Go to **IAM & Admin** > **Service Accounts**.
-    -   Create a new service account.
-    -   Create a new **Key** (JSON type).
-    -   Download the JSON file and save it as `credentials.json` in the root of your project directory.
-    -   *(Note: The script expects it at `./credentials.json`)*.
-4.  **Organize Photos**:
-    -   Create a main folder in Google Drive (e.g., "Portfolio").
-    -   Inside it, create subfolders for your categories (e.g., "Nature", "Street", "Travel").
-    -   Upload your photos to these subfolders.
-5.  **Share Folder**:
-    -   Open your "Portfolio" folder in Drive.
-    -   Click **Share** and add the **Service Account Email** (found in your JSON file) as a **Viewer**. This gives the script permission to see the photos.
-6.  **Get Folder ID**:
-    -   Open the folder in your browser.
-    -   Copy the ID from the URL: `drive.google.com/drive/folders/YOUR_FOLDER_ID_HERE`.
+## The Architecture at a Glance
+1. **Source of Truth**: Google Drive. You manage your portfolio entirely by creating folders and dropping photos into them.
+2. **Build Engine**: Local Python scripts download the photos, optimize them (converting massive iPhone HEIC files to web-friendly JPGs), and inject them into a static HTML template.
+3. **Delivery**: GitHub stores the generated `site/` folder, and Cloudflare Pages serves it globally. The live site is simply static files, resulting in 100/100 Lighthouse performance scores and instant loading.
 
 ---
 
-## ⚙️ Step 2: Configuration
+## 📚 The Setup Playbook
 
-1.  **Create Config File**:
-    Copy the example configuration file to `config.json` (which is git-ignored to keep your details private).
-    ```bash
-    cp config.example.json config.json
-    ```
+To set this up for your own portfolio, follow this 4-part guide sequentially. It looks like a lot, but you only have to do it once. After setup, updating your website is a single click.
 
-2.  **Edit details**:
-    Open `config.json` and update it with your details:
+### [Part 1: Google Cloud & Service Account Setup](1_google_cloud_setup.md)
+*Create a "bot user" so your computer can talk to Google Drive securely without manual login prompts.*
 
-```json
-{
-    "name": "Your Name",
-    "handle": "@your_instagram_handle",
-    "instagram_url": "https://www.instagram.com/<your_handle>/",
-    "profile_picture": "profile.png",
-    "google_drive_folder_id": "YOUR_FOLDER_ID_HERE"
-}
-```
+### [Part 2: Google Drive Structure & Sharing](2_google_drive_setup.md)
+*Organize your photos in Drive and explicitly share them with your new "bot user".*
 
-*   **name**: Your full name (displayed in sidebar).
-*   **handle**: Your social media handle text.
-*   **instagram_url**: The full URL to your Instagram profile (required).
-*   **profile_picture**: Place your profile image (e.g., `profile.png`) inside the `photos/` directory.
-*   **google_drive_folder_id**: The ID you copied in Step 1.
+### [Part 3: Local Configuration & Build](3_local_configuration.md)
+*Clone this repository, configure your personal details, and run the magic `deploy.sh` script to pull your photos.*
 
-> [!IMPORTANT]
-> All fields are required. The build scripts will fail if any variable is missing.
+### [Part 4: Deployment & CI/CD (Cloudflare Pages)](4_deployment_guide.md)
+*Push your generated site to GitHub and connect Cloudflare Pages to host it globally for free.*
 
 ---
 
-## 💻 Step 3: Local Setup
+## 🛠 Quick Update (Post-Setup)
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-username/photo-portfolio.git
-    cd photo-portfolio
-    ```
+Once you have completed all four parts, adding new photos is trivially simple:
 
-2.  **Install Dependencies**:
-    Recommended to use a virtual environment:
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
-    ```
+1. Drop new photos into your Google Drive folders.
+2. Open your terminal in the project directory.
+3. Run the master script:
+   ```bash
+   ./deploy.sh
+   ```
 
-3.  **Sync Photos**:
-    Run the sync script to grab photos and links from Drive:
-    ```bash
-    python scripts/sync_from_drive.py
-    ```
-    *(This creates `drive_links.json` which maps images to their Drive URLs)*.
-
-4.  **Generate Site**:
-    Process images (convert HEIC to JPG) and build the site:
-    ```bash
-    python scripts/optimize_images.py
-    python scripts/generate_site.py
-    ```
-
-5.  **Preview**:
-    ```bash
-    python -m http.server 8000 --directory site
-    ```
-    Visit `http://localhost:8000`.
-
----
-
-## ☁️ Step 4: Deployment (Cloudflare Pages)
-
-1.  **Push to GitHub**:
-    Commit your code (ensure `site/` folder is included, but `photos/` and `optimized/` are ignored).
-    ```bash
-    git add .
-    git commit -m "Initial deploy"
-    git push origin main
-    ```
-
-2.  **Cloudflare Pages**:
-    -   Log in to **Cloudflare Dashboard**.
-    -   Go to **Workers & Pages** > **Create Application** > **Pages** > **Connect to Git**.
-    -   Select your **GitHub Repository**.
-    -   **Build Settings**:
-        -   **Framework Preset**: `None`
-        -   **Build Command**: `exit 0` (Since we build locally and push the static site).
-        -   **Output Directory**: `site`
-    -   Click **Save and Deploy**.
-
-🎉 **Done!** context: Your site will auto-deploy whenever you push to GitHub.
-
----
-
-## 🔄 Updating Your Portfolio
-
-1.  Add new photos to **Google Drive**.
-2.  Run the update script:
-    ```bash
-    ./deploy.sh
-    ```
-    *(This script automates the entire pipeline: Sync -> Optimize -> Generate -> Push)*.
-    *   **Note**: This script will download new photos to `photos/` automatically. You do NOT need to run the sync script manually.
-
----
-
-## ⚠️ Important Notes
-
--   **Credentials**: NEVER commit `credentials.json` to GitHub. The `.gitignore` is set up to exclude it, but always double-check.
--   **HEIC Files**: The system automatically converts HEIC images to JPG for web compatibility.
+*The script will automatically download the new photos, resize them, update the HTML, commit the changes to your local Git, and push them to GitHub. Cloudflare will detect the push and automatically update your live site within seconds!*
