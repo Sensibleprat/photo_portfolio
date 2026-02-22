@@ -1,8 +1,8 @@
-# Photofolio: The Architect's Setup Guide
+# Photofolio: The Setup Guide
 
 Welcome to Photofolio. This system is designed to provide you with a high-performance, ultra-fast photography portfolio with **zero maintenance**. 
 
-As an engineer, you know that the best tools fade into the background. Instead of building a complex, custom Content Management System (CMS) with a database, authentication, and an admin dashboard, this architecture leverages the tools you already use daily: **Google Drive**.
+Instead of building a complex, custom Content Management System (CMS) with a database, authentication, and an admin dashboard, this architecture leverages the tools you already use daily: **Google Drive**.
 
 ## The Architecture at a Glance
 1. **Source of Truth**: Google Drive. You manage your portfolio entirely by creating folders and dropping photos into them.
