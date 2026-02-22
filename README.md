@@ -13,7 +13,19 @@ A minimal, high-performance photography portfolio website that syncs dynamically
 
 ## 🚀 Getting Started
 
-Please see the [Setup Guide](docs/setup.md) for complete instructions.
+To configure your own portfolio locally, simply clone the repository and run the built-in wizard:
+
+```bash
+git clone https://github.com/Sensibleprat/photo_portfolio.git
+cd photo_portfolio
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+python3 scripts/setup_wizard.py
+```
+
+The wizard will interactively guide you through connecting your Google Drive and setting up your profile. For the full end-to-end guide on creating your Google Cloud bot and deploying to Cloudflare, see the **[Architect's Setup Guide](docs/setup.md)**.
 
 ## 📂 Documentation
 
