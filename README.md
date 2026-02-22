@@ -8,6 +8,7 @@ A minimal, high-performance photography portfolio website that syncs dynamically
 -   **Folder-based Organization**: Simply create folders in Drive (e.g., "Nature", "Urban") to create tabs.
 -   **Blazing Fast**: Static site generation + 12-item pagination ("Load More") ensures instant loading.
 -   **Smart Randomization**: The "All Photos" tab is shuffled at build-time to show a fresh mix of your work.
+-   **Interactive Setup**: A guided terminal wizard makes configuring your site effortless.
 -   **Deep Linking**: Click any photo to see the full-quality original in Drive.
 
 ## 🚀 Getting Started
