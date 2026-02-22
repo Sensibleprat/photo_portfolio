@@ -21,8 +21,8 @@ To set this up for your own portfolio, follow this 4-part guide sequentially. It
 ### [Part 2: Google Drive Structure & Sharing](2_google_drive_setup.md)
 *Organize your photos in Drive and explicitly share them with your new "bot user".*
 
-### [Part 3: Local Configuration & Build](3_local_configuration.md)
-*Clone this repository, configure your personal details, and run the magic `deploy.sh` script to pull your photos.*
+### [Part 3: Local Configuration & Setup Wizard](3_local_configuration.md)
+*Clone this repository and run the interactive `setup_wizard.py` to seamlessly configure your profile and connect your Google Drive.*
 
 ### [Part 4: Deployment & CI/CD (Cloudflare Pages)](4_deployment_guide.md)
 *Push your generated site to GitHub and connect Cloudflare Pages to host it globally for free.*

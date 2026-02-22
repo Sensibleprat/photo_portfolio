@@ -23,31 +23,17 @@ pip install -r requirements.txt
 > **Architect's Insight: Dependencies** 
 > The `requirements.txt` installs `Pillow` (for image resizing) and `pillow-heif` (for converting Apple's HEIC photo format to standard web-friendly JPGs). It also installs the Google API libraries needed to fetch your photos.
 
-## Step 3: Add Credentials
-Move the `credentials.json` file you downloaded in Part 1 to the root folder of this project (the folder containing `README.md`).
+## Step 3: Run the Setup Wizard
+Instead of manually configuring files and moving credentials around, simply run the interactive setup wizard. It will guide you through connecting your Google Drive and setting up your profile details.
 
-## Step 4: Configure `config.json`
-The repository comes with a template configuration file named `config.example.json`. This file tells the build script your name, your Instagram, and which Google Drive folder holds your art.
-
-1. **Copy the template**:
-   ```bash
-   cp config.example.json config.json
-   ```
-2. **Open `config.json` in a text editor**.
-3. Fill it out with your specific details:
-
-```json
-{
-    "name": "Your Awesome Name",
-    "handle": "@yourhandle",
-    "instagram_url": "https://www.instagram.com/yourhandle/",
-    "profile_picture": "profile.png",
-    "google_drive_folder_id": "THE_ID_YOU_COPIED_IN_PART_2"
-}
+```bash
+python scripts/setup_wizard.py
 ```
 
-> [!CAUTION]
-> **Avoid Committing Secrets:** Like `credentials.json`, your `config.json` file contains unique identifiers. By default, the `.gitignore` prevents you from uploading this to GitHub, keeping your setup secure. The only file that goes to GitHub is `config.example.json`.
+The wizard will ask for:
+1. Your Name, Handle, and Instagram URL.
+2. Your Google Drive Folder ID (from Part 2).
+3. The location of your `credentials.json` file (from Part 1), which it will securely copy into the project for you.
 
 ## Step 5: Test the Build Locally
 Let's see the magic happen. Run the deployment script to trigger the full sync -> optimize -> build cycle:
