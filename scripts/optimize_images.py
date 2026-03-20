@@ -103,6 +103,29 @@ def process_all_images():
     # Create output directory
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
+    import shutil
+    # --- Two-Way Sync Cache Cleanup ---
+    if os.path.exists(OUTPUT_DIR):
+        input_categories = set(os.listdir(INPUT_DIR))
+        for opt_cat in os.listdir(OUTPUT_DIR):
+            opt_cat_path = os.path.join(OUTPUT_DIR, opt_cat)
+            if not os.path.isdir(opt_cat_path):
+                continue
+            
+            # If the category was deleted from 'photos', delete it from 'optimized'
+            if opt_cat not in input_categories:
+                print(f"🗑️  Removing deleted category from optimized cache: {opt_cat}")
+                shutil.rmtree(opt_cat_path)
+            else:
+                # Category exists, now check individual images inside it
+                input_cat_path = os.path.join(INPUT_DIR, opt_cat)
+                input_images = {os.path.splitext(f)[0] for f in os.listdir(input_cat_path)}
+                
+                for opt_img in os.listdir(opt_cat_path):
+                    if os.path.splitext(opt_img)[0] not in input_images:
+                        print(f"   🗑️  Removing deleted image from cache: {opt_img}")
+                        os.remove(os.path.join(opt_cat_path, opt_img))
+    
     total_images = 0
     
     if ENABLE_OPTIMIZATION:
@@ -125,6 +148,8 @@ def process_all_images():
         print(f"📂 Processing: {category}")
         
         output_category_path = os.path.join(OUTPUT_DIR, category)
+        # BUG FIX: Actually create the directory so we don't crash with [Errno 2] No such file or directory
+        os.makedirs(output_category_path, exist_ok=True)
         
         # Process all images in this category
         images = [f for f in os.listdir(category_path) 
