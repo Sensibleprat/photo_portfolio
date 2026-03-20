@@ -295,17 +295,26 @@ def main():
         # Ensure credentials.json and config.json are ignored if .gitignore is missing or broken
         os.system("echo 'credentials.json' >> .gitignore")
         os.system("echo 'config.json' >> .gitignore")
+        
+    # Check if the user has a global git identity, otherwise commits will fail
+    global_name = os.popen("git config --global user.name").read().strip()
+    global_email = os.popen("git config --global user.email").read().strip()
+    
+    if not global_name or not global_email:
+        print_info("\nWe need to tell your computer who is uploading this code.")
+        git_name = get_input("What is your Name for GitHub records?", default=username)
+        git_email = get_input("What Email Address did you use to sign up for GitHub?")
+        
+        # Save globally so it permanently fixes their computer for future operations
+        os.system(f"git config --global user.name \"{git_name}\" > /dev/null 2>&1")
+        os.system(f"git config --global user.email \"{git_email}\" > /dev/null 2>&1")
+        print_success("Git identity permanently saved to your computer.")
     
     # Use the token in the URL so they never get prompted for a password by git
     remote_url = f"https://{username}:{github_token}@github.com/{username}/{repo_name}.git"
     
     os.system("git remote remove origin > /dev/null 2>&1")
     os.system(f"git remote add origin {remote_url} > /dev/null 2>&1")
-    
-    # Critical fix: Non-engineers won't have git globally configured. Set it locally so commit succeeds.
-    os.system(f"git config user.name \"{name}\" > /dev/null 2>&1")
-    os.system(f"git config user.email \"{username}@users.noreply.github.com\" > /dev/null 2>&1")
-    
     os.system("git add . > /dev/null 2>&1")
     os.system("git commit -m \"Initial Photofolio Setup\" > /dev/null 2>&1")
     
