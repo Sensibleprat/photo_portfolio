@@ -39,3 +39,6 @@ config.json
 
 # Generated Metadata
 drive_links.json
+
+# Local personal files
+docs/interview_guide.md
