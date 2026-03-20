@@ -13,6 +13,11 @@ A minimal, high-performance photography portfolio website that syncs dynamically
 
 ## 🚀 Getting Started
 
+> **⚠️ Prerequisite**: You must have Python installed.
+> - **Mac**: `brew install python3`
+> - **Ubuntu**: `sudo apt update && sudo apt install python3 python3-venv python3-pip -y`
+> - **Windows**: [Download installer from python.org](https://www.python.org/downloads/)
+
 To configure your own portfolio locally, simply download the repository code and run the built-in wizard:
 
 1. Click the green **Code** button at the top of this repository and select **Download ZIP**.

@@ -8,7 +8,20 @@ You don't need to know how to use Git. Simply go to the repository page on GitHu
 Extract the ZIP file, open your terminal (Command Prompt/PowerShell on Windows, Terminal on Mac/Linux), and navigate into the extracted folder.
 
 ## Step 2: Set Up Python
-The build scripts require Python. Setting up a "virtual environment" ensures these scripts don't conflict with other Python tools on your computer.
+The build scripts require Python. If you don't already have it installed, run the corresponding command for your system:
+
+**Mac**:
+```bash
+brew install python3
+```
+
+**Ubuntu/Debian Linux**:
+```bash
+sudo apt update && sudo apt install python3 python3-venv python3-pip -y
+```
+
+**Windows**:
+Download and run the installer from [python.org](https://www.python.org/downloads/). **Make sure to check the box that says "Add Python to PATH" during installation.**
 
 ```bash
 python3 -m venv .venv
