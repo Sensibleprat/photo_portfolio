@@ -13,11 +13,13 @@ A minimal, high-performance photography portfolio website that syncs dynamically
 
 ## 🚀 Getting Started
 
-To configure your own portfolio locally, simply clone the repository and run the built-in wizard:
+To configure your own portfolio locally, simply download the repository code and run the built-in wizard:
+
+1. Click the green **Code** button at the top of this repository and select **Download ZIP**.
+2. Extract the ZIP file and open your terminal inside the extracted folder.
+3. Run the following commands to install dependencies and start the wizard:
 
 ```bash
-git clone https://github.com/Sensibleprat/photo_portfolio.git
-cd photo_portfolio
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt

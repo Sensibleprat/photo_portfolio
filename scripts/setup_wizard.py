@@ -6,6 +6,8 @@ import sys
 import webbrowser
 import glob
 from pathlib import Path
+import urllib.request
+import urllib.error
 
 # ANSI color codes for pretty terminal output
 class Colors:
@@ -233,27 +235,80 @@ def main():
     print_success(f"Site configuration successfully saved!")
 
     # ---------------------------------------------------------
-    # STEP 6: GitHub Ownership
+    # STEP 6: GitHub Code Storage (Invisible Git)
     # ---------------------------------------------------------
     clear_screen()
-    print_step("Step 6: Taking Ownership of the Code (GitHub)")
-    print_info("Right now, your computer is looking at the original template repository.")
-    print_info("We need to connect it to your own personal GitHub account.")
+    print_step("Step 6: Creating Your Cloud Storage (GitHub)")
+    print_info("To put your website on the internet, the code needs a home.")
+    print_info("We will use GitHub to store your site for free.")
     print("")
     
-    pause_for_user("Press Enter to open GitHub and create a new repository")
-    webbrowser.open("https://github.com/new")
+    pause_for_user("Press Enter to open GitHub and generate an Access Token")
+    # This URL pre-fills a token with exactly the right permissions
+    webbrowser.open("https://github.com/settings/tokens/new?scopes=repo&description=Photofolio+Deployment")
     
-    print_info("\n1. Name it something like 'my-portfolio' and make it Public.")
-    print_info("2. Do NOT check 'Add a README file'. Just click 'Create repository'.")
-    print_info("3. Copy the URL of your new repository from the address bar.")
+    print_info("\n1. Scroll all the way to the bottom of the webpage and click the green 'Generate token' button.")
+    print_info("2. Copy the green string of characters that appears (it starts with literally 'ghp_').")
     print("")
     
-    repo_url = get_input("Paste your new GitHub Repository URL here")
-    if repo_url:
-        print_info("Linking your local project to your new GitHub repository...")
-        os.system(f"git remote set-url origin {repo_url} > /dev/null 2>&1")
-        print_success("GitHub link established!")
+    github_token = get_input("Paste your GitHub Access Token here")
+    
+    # Use API to get username
+    username = None
+    try:
+        req = urllib.request.Request("https://api.github.com/user", headers={"Authorization": f"token {github_token}"})
+        with urllib.request.urlopen(req) as response:
+            user_data = json.loads(response.read().decode())
+            username = user_data.get('login')
+            print_success(f"Authenticated as GitHub user: {username}")
+    except Exception as e:
+        print_error(f"Failed to authenticate with GitHub. Are you sure you copied the token correctly? Error: {str(e)}")
+        sys.exit(1)
+
+    repo_name = "photo-portfolio"
+    
+    print_info(f"\nCreating a new cloud repository named '{repo_name}' for you...")
+    try:
+        # Create repo via API
+        repo_data = json.dumps({"name": repo_name, "private": False}).encode('utf-8')
+        req = urllib.request.Request("https://api.github.com/user/repos", data=repo_data, headers={"Authorization": f"token {github_token}", "Content-Type": "application/json"})
+        with urllib.request.urlopen(req) as response:
+            print_success("Cloud repository created successfully!")
+    except urllib.error.HTTPError as e:
+        if e.code == 422: # Unprocessable Entity (usually means repo already exists)
+            print_warning("Repository already exists. We will link to the existing one.")
+        else:
+            print_error(f"Failed to create repository: {e.read().decode()}")
+            sys.exit(1)
+    except Exception as e:
+        print_error(f"Failed to create repository: {str(e)}")
+        sys.exit(1)
+
+    print_info("\nLinking your computer to the cloud and uploading the latest code...")
+    # Run the invisible git commands!
+    os.chdir(base_dir)
+    
+    # Initialize Git if they downloaded via ZIP instead of git clone
+    if not os.path.exists('.git'):
+        os.system("git init > /dev/null 2>&1")
+        os.system("git checkout -b main > /dev/null 2>&1")
+        # Ensure credentials.json and config.json are ignored if .gitignore is missing or broken
+        os.system("echo 'credentials.json' >> .gitignore")
+        os.system("echo 'config.json' >> .gitignore")
+    
+    # Use the token in the URL so they never get prompted for a password by git
+    remote_url = f"https://{username}:{github_token}@github.com/{username}/{repo_name}.git"
+    
+    os.system("git remote remove origin > /dev/null 2>&1")
+    os.system(f"git remote add origin {remote_url} > /dev/null 2>&1")
+    os.system("git add . > /dev/null 2>&1")
+    os.system("git commit -m \"Initial Photofolio Setup\" > /dev/null 2>&1")
+    
+    print_info("Uploading (this may take a moment)...")
+    if os.system("git push -u origin main > /dev/null 2>&1") == 0:
+        print_success("Code successfully uploaded to GitHub!")
+    else:
+        print_warning("Could not automatically push to GitHub. You may need to do it manually later.")
 
     # ---------------------------------------------------------
     # STEP 7: Cloudflare Hosting

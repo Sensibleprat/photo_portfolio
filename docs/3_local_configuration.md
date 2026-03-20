@@ -2,13 +2,10 @@
 
 Now that your Google Drive is prepped and your Service Account is created, we need to bridge the gap between "the cloud" and "the code". By configuring the scripts locally, we establish the bridge that downloads, optimizes, and structures your portfolio.
 
-## Step 1: Clone the Repository
-Open a terminal (Command Prompt/PowerShell on Windows, Terminal on Mac/Linux) and clone this repository to your local machine:
+## Step 1: Download the Code
+You don't need to know how to use Git. Simply go to the repository page on GitHub, click the green **Code** button, and select **Download ZIP**.
 
-```bash
-git clone https://github.com/Sensibleprat/photo_portfolio.git
-cd photo_portfolio
-```
+Extract the ZIP file, open your terminal (Command Prompt/PowerShell on Windows, Terminal on Mac/Linux), and navigate into the extracted folder.
 
 ## Step 2: Set Up Python
 The build scripts require Python. Setting up a "virtual environment" ensures these scripts don't conflict with other Python tools on your computer.
