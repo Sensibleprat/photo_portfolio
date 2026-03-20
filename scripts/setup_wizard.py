@@ -113,9 +113,14 @@ def main():
     if not args.skip_to_cloud:
         print_header("Photofolio: Interactive Setup Wizard")
         print_info("Welcome! I'll guide you step-by-step through setting up your photography portfolio.")
-        print_info("No coding or technical experience required. Let's get started.")
+        print_info("No coding or technical experience required.")
         print("")
-        pause_for_user("Press Enter to begin")
+        print_warning("IMPORTANT: Before we begin, your Google Drive MUST be organized.")
+        print_info("1. Create one main 'Portfolio' folder in your Drive.")
+        print_info("2. Inside it, create sub-folders for each category (e.g., 'Nature', 'Street').")
+        print_info("3. Place your photos exactly inside those sub-folders.")
+        print("")
+        pause_for_user("Press Enter when your Google Drive is organized and ready to go")
         
         # ---------------------------------------------------------
         # STEP 1: Personal Details
