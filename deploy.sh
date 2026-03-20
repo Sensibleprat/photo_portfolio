@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 #
 # One-Click Portfolio Deployment Script
 # Workflow: Google Drive → Local → Optimize → Generate → Deploy

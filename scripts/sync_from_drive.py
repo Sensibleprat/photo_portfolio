@@ -1,6 +1,8 @@
 import os
 import io
 import json
+import shutil
+import sys
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
@@ -16,14 +18,14 @@ def load_config():
     if not os.path.exists(config_path):
         print(f"❌ Error: {config_path} not found!")
         print("   Please create config.json with your details.")
-        exit(1)
+        sys.exit(1)
         
     with open(config_path, 'r') as f:
         config = json.load(f)
         
     if 'google_drive_folder_id' not in config:
         print(f"❌ Error: 'google_drive_folder_id' missing in {config_path}")
-        exit(1)
+        sys.exit(1)
         
     return config
 
@@ -103,8 +105,17 @@ def sync_photos():
     
     if not folders:
         print("❌ No category folders found in Google Drive!")
-        print(f"   Check that folder ID '{PARENT_FOLDER_ID}' is correct.")
-        return
+        print(f"   Check that folder ID '{PARENT_FOLDER_ID}' is correct or add folders to it.")
+        sys.exit(1)  # Abort deployment if sync fails
+    
+    # --- Two-Way Sync: Cleanup Stale Local Categories ---
+    drive_category_names = [f['name'] for f in folders]
+    if os.path.exists(LOCAL_PHOTOS_DIR):
+        for local_dir in os.listdir(LOCAL_PHOTOS_DIR):
+            local_path = os.path.join(LOCAL_PHOTOS_DIR, local_dir)
+            if os.path.isdir(local_path) and local_dir not in drive_category_names:
+                print(f"🗑️  Removing deleted category from local storage: {local_dir}")
+                shutil.rmtree(local_path)
     
     total_downloaded = 0
     total_skipped = 0
@@ -122,6 +133,14 @@ def sync_photos():
         
         # Get images in this category
         images = get_images(service, category_id)
+        
+        # --- Two-Way Sync: Cleanup Stale Local Images ---
+        drive_image_names = [img['name'] for img in images]
+        if os.path.exists(local_category_path):
+            for local_file in os.listdir(local_category_path):
+                if local_file not in drive_image_names:
+                    print(f"   🗑️  Removing deleted image: {local_file}")
+                    os.remove(os.path.join(local_category_path, local_file))
         
         for image in images:
             image_name = image['name']
