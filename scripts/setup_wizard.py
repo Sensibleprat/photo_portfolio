@@ -277,7 +277,9 @@ def main():
         print_error(f"Failed to authenticate with GitHub. Are you sure you copied the token correctly? Error: {str(e)}")
         sys.exit(1)
 
-    repo_name = "photo-portfolio"
+    repo_name = get_input("\nWhat do you want to name your website's code repository online?", default="photo-portfolio")
+    # Clean up the name for GitHub compatibility
+    repo_name = repo_name.replace(" ", "-").lower()
     
     print_info(f"\nCreating a new cloud repository named '{repo_name}' for you...")
     try:
