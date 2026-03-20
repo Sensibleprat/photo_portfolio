@@ -148,7 +148,6 @@ def process_all_images():
         print(f"📂 Processing: {category}")
         
         output_category_path = os.path.join(OUTPUT_DIR, category)
-        # BUG FIX: Actually create the directory so we don't crash with [Errno 2] No such file or directory
         os.makedirs(output_category_path, exist_ok=True)
         
         # Process all images in this category
@@ -160,7 +159,11 @@ def process_all_images():
             
             # Determine output filename
             if ENABLE_OPTIMIZATION and not PRESERVE_FORMAT:
-                output_filename = os.path.splitext(image_file)[0] + '.jpg'
+                base, ext = os.path.splitext(image_file)
+                if ext.lower() in ['.jpg', '.jpeg']:
+                    output_filename = image_file # Preserve exact original case to prevent Git desync on Mac
+                else:
+                    output_filename = base + '.jpg'
             else:
                 output_filename = image_file
             
