@@ -132,7 +132,7 @@ def main():
     print_info("2. Double-click to open that new folder.")
     print_info("3. Look at the URL in your browser's top address bar.")
     print_info("   It will look like: drive.google.com/drive/folders/1KtAZreDObn...-")
-    print_info("4. Copy that long string of characters at the very end.")
+    print_info("4. Copy that long string of characters at the very end after `.../folder/`.")
     print("")
     
     folder_id = get_input("Paste your Google Drive Folder ID here")
@@ -214,7 +214,7 @@ def main():
     # STEP 5: Generate Config
     # ---------------------------------------------------------
     clear_screen()
-    print_step("Step 5: Finalizing Setup")
+    print_step("Step 5: Finalizing Local Setup")
     
     example_config_path = os.path.join(base_dir, 'config.example.json')
     config_path = os.path.join(base_dir, 'config.json')
@@ -231,12 +231,61 @@ def main():
         json.dump(config_data, f, indent=4)
         
     print_success(f"Site configuration successfully saved!")
+
+    # ---------------------------------------------------------
+    # STEP 6: GitHub Ownership
+    # ---------------------------------------------------------
+    clear_screen()
+    print_step("Step 6: Taking Ownership of the Code (GitHub)")
+    print_info("Right now, your computer is looking at the original template repository.")
+    print_info("We need to connect it to your own personal GitHub account.")
+    print("")
     
+    pause_for_user("Press Enter to open GitHub and create a new repository")
+    webbrowser.open("https://github.com/new")
+    
+    print_info("\n1. Name it something like 'my-portfolio' and make it Public.")
+    print_info("2. Do NOT check 'Add a README file'. Just click 'Create repository'.")
+    print_info("3. Copy the URL of your new repository from the address bar.")
+    print("")
+    
+    repo_url = get_input("Paste your new GitHub Repository URL here")
+    if repo_url:
+        print_info("Linking your local project to your new GitHub repository...")
+        os.system(f"git remote set-url origin {repo_url} > /dev/null 2>&1")
+        print_success("GitHub link established!")
+
+    # ---------------------------------------------------------
+    # STEP 7: Cloudflare Hosting
+    # ---------------------------------------------------------
+    clear_screen()
+    print_step("Step 7: Launching to the Internet (Cloudflare Pages)")
+    print_info("The final step is connecting Cloudflare so your website is hosted for free.")
+    print("")
+    
+    pause_for_user("Press Enter to open Cloudflare Pages")
+    webbrowser.open("https://dash.cloudflare.com/?to=/:account/pages/new")
+    
+    print_info("\n1. Click 'Connect to Git' and choose your new GitHub repository.")
+    print_info("2. " + Colors.WARNING + Colors.BOLD + "CRITICAL:" + Colors.ENDC + " When Cloudflare asks for Build Settings, enter exactly this:")
+    print_info(f"   - Framework Preset:   {Colors.BOLD}None{Colors.ENDC}")
+    print_info(f"   - Build Command:      {Colors.BOLD}exit 0{Colors.ENDC}")
+    print_info(f"   - Output Directory:   {Colors.BOLD}site{Colors.ENDC}")
+    print_info("3. Click 'Save and Deploy'.")
+    print_info("Note: The very first deployment right now will 'fail' because you haven't uploaded")
+    print_info("your photos yet. We will do that next!")
+    print("")
+    pause_for_user("Press Enter after setting up Cloudflare")
+    
+    # ---------------------------------------------------------
+    # CONCLUSION
+    # ---------------------------------------------------------
+    clear_screen()
     print_header("Setup Complete! 🎉")
-    print_info("You did it! Your Google Drive pipeline is officially connected.")
-    print_info("To build your website, simply add some folders (e.g., 'Nature') and photos to Drive,")
-    print_info("then run the launch command in this terminal:\n")
-    print(f"{Colors.GREEN}{Colors.BOLD}    ./deploy.sh{Colors.ENDC}\n")
+    print_info("You did it! Your entire automated pipeline is connected.")
+    print_info("Whenever you want to build and update your website, just run:")
+    print(f"\n{Colors.GREEN}{Colors.BOLD}    ./deploy.sh{Colors.ENDC}\n")
+    print_info("Run that command right now to perform your very first upload!")
 
 
 def handle_credentials_upload(base_dir, dest_path):
