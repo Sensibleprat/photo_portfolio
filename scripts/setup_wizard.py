@@ -301,6 +301,11 @@ def main():
     
     os.system("git remote remove origin > /dev/null 2>&1")
     os.system(f"git remote add origin {remote_url} > /dev/null 2>&1")
+    
+    # Critical fix: Non-engineers won't have git globally configured. Set it locally so commit succeeds.
+    os.system(f"git config user.name \"{name}\" > /dev/null 2>&1")
+    os.system(f"git config user.email \"{username}@users.noreply.github.com\" > /dev/null 2>&1")
+    
     os.system("git add . > /dev/null 2>&1")
     os.system("git commit -m \"Initial Photofolio Setup\" > /dev/null 2>&1")
     
