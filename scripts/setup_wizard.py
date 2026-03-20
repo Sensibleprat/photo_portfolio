@@ -92,35 +92,52 @@ def auto_detect_credentials():
     return None
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Photofolio Setup Wizard")
+    parser.add_argument("--skip-to-cloud", action="store_true", help="Skip Google Drive setup and go straight to GitHub/Cloudflare")
+    args = parser.parse_args()
+
     clear_screen()
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    example_config_path = os.path.join(base_dir, 'config.example.json')
+    config_path = os.path.join(base_dir, 'config.json')
+    name = "Photofolio User"
     
-    print_header("Photofolio: Interactive Setup Wizard")
-    print_info("Welcome! I'll guide you step-by-step through setting up your photography portfolio.")
-    print_info("No coding or technical experience required. Let's get started.")
-    print("")
-    pause_for_user("Press Enter to begin")
-    
-    # ---------------------------------------------------------
-    # STEP 1: Personal Details
-    # ---------------------------------------------------------
-    clear_screen()
-    print_step("Step 1: Your Profile")
-    print_info("Let's set up the name and social links that will appear on your website.")
-    print("")
-    
-    name = get_input("Your Full Name (e.g., Jane Doe)")
-    
-    handle = get_input("Your Display Handle (e.g., @janedoe)")
-    if not handle.startswith('@'):
-        handle = f"@{handle}"
+    # Try to load existing name if config exists
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r') as f:
+                name = json.load(f).get('name', "Photofolio User")
+        except: pass
+
+    if not args.skip_to_cloud:
+        print_header("Photofolio: Interactive Setup Wizard")
+        print_info("Welcome! I'll guide you step-by-step through setting up your photography portfolio.")
+        print_info("No coding or technical experience required. Let's get started.")
+        print("")
+        pause_for_user("Press Enter to begin")
         
-    insta_url = get_input("Your Instagram URL (e.g., https://instagram.com/janedoe)")
-    
-    print_success("Profile details saved.")
-    
-    # ---------------------------------------------------------
-    # STEP 2: Google Drive
-    # ---------------------------------------------------------
+        # ---------------------------------------------------------
+        # STEP 1: Personal Details
+        # ---------------------------------------------------------
+        clear_screen()
+        print_step("Step 1: Your Profile")
+        print_info("Let's set up the name and social links that will appear on your website.")
+        print("")
+        
+        name = get_input("Your Full Name (e.g., Jane Doe)")
+        
+        handle = get_input("Your Display Handle (e.g., @janedoe)")
+        if not handle.startswith('@'):
+            handle = f"@{handle}"
+            
+        insta_url = get_input("Your Instagram URL (e.g., https://instagram.com/janedoe)")
+        
+        print_success("Profile details saved.")
+        
+        # ---------------------------------------------------------
+        # STEP 2: Google Drive
+        # ---------------------------------------------------------
     clear_screen()
     print_step("Step 2: Connect Google Drive")
     print_info("Your website uses Google Drive to store images. Think of it as your admin panel.")
@@ -178,8 +195,6 @@ def main():
     # ---------------------------------------------------------
     clear_screen()
     print_step("Step 4: Linking the Key")
-    
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     credentials_dest = os.path.join(base_dir, 'credentials.json')
     
     # Try Auto-Detect
@@ -217,9 +232,6 @@ def main():
     # ---------------------------------------------------------
     clear_screen()
     print_step("Step 5: Finalizing Local Setup")
-    
-    example_config_path = os.path.join(base_dir, 'config.example.json')
-    config_path = os.path.join(base_dir, 'config.json')
     
     with open(example_config_path, 'r') as f:
         config_data = json.load(f)
