@@ -159,11 +159,7 @@ def process_all_images():
             
             # Determine output filename
             if ENABLE_OPTIMIZATION and not PRESERVE_FORMAT:
-                base, ext = os.path.splitext(image_file)
-                if ext.lower() in ['.jpg', '.jpeg']:
-                    output_filename = image_file # Preserve exact original case to prevent Git desync on Mac
-                else:
-                    output_filename = base + '.jpg'
+                output_filename = os.path.splitext(image_file)[0] + '.jpg'
             else:
                 output_filename = image_file
             

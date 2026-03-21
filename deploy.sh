@@ -33,6 +33,12 @@ echo ""
 
 # Step 4: Git Add & Commit
 echo "📝 Step 4/5: Committing changes..."
+
+# Fix: Force Git to respect case-sensitivity changes on Mac by flushing the index for images
+if [ -d "site/images" ]; then
+    git rm -r --cached site/images/ --quiet || true
+fi
+
 git add .
 
 # Get current date for commit message
