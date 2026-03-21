@@ -2,6 +2,8 @@
 
 A minimal, high-performance photography portfolio website that syncs dynamically from **Google Drive** and hosts on **Cloudflare Pages**.
 
+**Live Demo:** [View an example portfolio built with this framework](https://photo-portfolio-17f.pages.dev/)
+
 ## ✨ Features
 -   **Google Drive Sync**: Manage your photos in Drive; they appear on your site.
 -   **Auto-Optimization**: Automatically converts HEIC to JPG and optimizes for web.
