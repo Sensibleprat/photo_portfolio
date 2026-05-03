@@ -45,6 +45,8 @@ The wizard will ask for:
 2. Your Google Drive Folder ID (from Part 2).
 3. The location of your `credentials.json` file (from Part 1), which it will securely copy into the project for you.
 
+*(Note: You can also manually add `"profile_picture": "your_image.jpg"` to your `config.json` after setup, and place that image inside your local `photos/` directory to have it appear on the homepage!)*
+
 ## Step 4: Test the Build Locally
 Let's see the magic happen. Run the deployment script to trigger the full sync -> optimize -> build cycle:
 

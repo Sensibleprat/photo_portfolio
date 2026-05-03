@@ -43,14 +43,14 @@ The wizard will interactively guide you through connecting your Google Drive and
 
 ## 🛠 Quick Update
 
-If you have added new photos to Google Drive:
+If you have added or removed photos in Google Drive:
 
 ```bash
 ./deploy.sh
 ```
 
 This command will:
-1. **Sync** new photos from Google Drive.
+1. **Sync** photos from Google Drive (handling both new additions and removals).
 2. **Optimize** them for the web.
 3. **Generate** the site.
 4. **Deploy** to Cloudflare Pages.

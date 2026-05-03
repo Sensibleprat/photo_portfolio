@@ -45,13 +45,13 @@ Click **Save and Deploy**.
 Your portfolio is live! 🚀 Cloudflare will give you a free `<something>.pages.dev` URL.
 
 ### How to update your website in the future:
-1. Add new photos to your Google Drive folders.
+1. Add or remove photos in your Google Drive folders.
 2. Open your terminal in your project directory.
 3. Run:
    ```bash
    ./deploy.sh
    ```
-4. **Done.** The script will download the new photos, resize them, update the HTML, commit the changes to your local Git, and push them to GitHub. Cloudflare will detect the push and automatically update your live site within seconds!
+4. **Done.** The script will sync the changes (downloading new photos and removing deleted ones), resize them, update the HTML, commit the changes to your local Git, and push them to GitHub. Cloudflare will detect the push and automatically update your live site within seconds!
 
 > [!SUCCESS]
 > **Congratulations!** You have successfully orchestrated a modern, free, automated Google-Drive-to-Website pipeline.

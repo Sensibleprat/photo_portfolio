@@ -31,13 +31,13 @@ To set this up for your own portfolio, follow this 4-part guide sequentially. It
 
 ## 🛠 Quick Update (Post-Setup)
 
-Once you have completed all four parts, adding new photos is trivially simple:
+Once you have completed all four parts, updating your portfolio is trivially simple:
 
-1. Drop new photos into your Google Drive folders.
+1. Add or remove photos in your Google Drive folders.
 2. Open your terminal in the project directory.
 3. Run the master script:
    ```bash
    ./deploy.sh
    ```
 
-*The script will automatically download the new photos, resize them, update the HTML, commit the changes to your local Git, and push them to GitHub. Cloudflare will detect the push and automatically update your live site within seconds!*
+*The script will automatically sync the changes (downloading new photos and removing deleted ones), resize them, update the HTML, commit the changes to your local Git, and push them to GitHub. Cloudflare will detect the push and automatically update your live site within seconds!*
