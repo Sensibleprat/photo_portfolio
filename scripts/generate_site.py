@@ -8,6 +8,7 @@ import os
 import json
 import shutil
 from pathlib import Path
+from PIL import Image
 
 # Configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,75 +49,144 @@ def load_drive_links():
             return json.load(f)
     return {}
 
+def get_image_entries(folder_path, relative_prefix, drive_links):
+    """Scan a single flat folder for images and return a list of image entry dicts."""
+    images = []
+    for file in sorted(os.listdir(folder_path)):
+        file_path = os.path.join(folder_path, file)
+        if not os.path.isfile(file_path):
+            continue
+        ext = os.path.splitext(file.lower())[1]
+        if ext not in SUPPORTED_FORMATS:
+            continue
+
+        relative_path = f"{relative_prefix}/{file}"
+        drive_url = drive_links.get(file, "")
+
+        # If extension changed (HEIC -> jpg), match by stem
+        if not drive_url:
+            base_name = os.path.splitext(file)[0]
+            for link_name, link_url in drive_links.items():
+                if os.path.splitext(link_name)[0] == base_name:
+                    drive_url = link_url
+                    break
+
+        width = height = None
+        try:
+            with Image.open(file_path) as img:
+                width, height = img.size
+        except Exception:
+            pass
+
+        entry = {"name": file, "path": relative_path, "drive_url": drive_url}
+        if width and height:
+            entry["width"] = width
+            entry["height"] = height
+        images.append(entry)
+    return images
+
+
 def scan_photos(drive_links):
-    """Scan photo directories and build portfolio data structure"""
+    """Scan photo directories and build portfolio data structure.
+    
+    Supports two layouts:
+    - Flat:       optimized/CategoryName/*.jpg
+    - Hierarchical: optimized/ParentName/ChildName/*.jpg
+    """
     portfolio_data = {"tabs": []}
     
     if not os.path.exists(PHOTOS_DIR):
-        print(f"⚠️  Warning: '{PHOTOS_DIR}' directory not found!")
-        print(f"   Run 'python optimize_images.py' first to create optimized images.")
+        print(f"Warning: '{PHOTOS_DIR}' directory not found!")
+        print("   Run 'python optimize_images.py' first to create optimized images.")
         return portfolio_data
     
-    # Get all category folders
-    categories = [d for d in os.listdir(PHOTOS_DIR) 
-                 if os.path.isdir(os.path.join(PHOTOS_DIR, d)) and not d.startswith('.')]
+    categories = [d for d in sorted(os.listdir(PHOTOS_DIR))
+                  if os.path.isdir(os.path.join(PHOTOS_DIR, d)) and not d.startswith('.')]
     
-    print("📸 Scanning Photo Folders...")
+    print("Scanning Photo Folders...")
     
-    for category in sorted(categories):
+    for category in categories:
         category_path = os.path.join(PHOTOS_DIR, category)
-        
-        print(f"   📂 {category}")
-        
-        # Get all images in this category
-        images = []
-        for file in sorted(os.listdir(category_path)):
-            file_path = os.path.join(category_path, file)
-            
-            if os.path.isfile(file_path):
-                ext = os.path.splitext(file.lower())[1]
-                if ext in SUPPORTED_FORMATS:
-                    # Store relative path within site directory
-                    # Images will be copied to site/images/
-                    relative_path = f"images/{category}/{file}"
-                    
-                    # Original filename logic to match drive_links keys
-                    drive_url = drive_links.get(file, "")
-                    
-                    # If conversion changed extension (HEIC -> jpg), try to find original key
-                    if not drive_url:
-                        base_name = os.path.splitext(file)[0]
-                        for link_name, link_url in drive_links.items():
-                            if os.path.splitext(link_name)[0] == base_name:
-                                drive_url = link_url
-                                break
-                    
-                    images.append({
-                        "name": file,
-                        "path": relative_path,
-                        "drive_url": drive_url
+        print(f"   {category}")
+
+        # Detect sub-folders
+        sub_folders = [d for d in sorted(os.listdir(category_path))
+                       if os.path.isdir(os.path.join(category_path, d)) and not d.startswith('.')]
+
+        if sub_folders:
+            # --- Hierarchical mode ---
+            children = []
+            all_child_images = []
+
+            # Images placed directly in the parent folder itself
+            parent_own_images = get_image_entries(
+                category_path, f"images/{category}", drive_links
+            )
+
+            for child_name in sub_folders:
+                child_path = os.path.join(category_path, child_name)
+                child_images = get_image_entries(
+                    child_path, f"images/{category}/{child_name}", drive_links
+                )
+                if child_images:
+                    all_child_images.extend(child_images)
+                    children.append({
+                        "category": child_name,
+                        "parent": category,
+                        "images": child_images
                     })
-        
-        if images:
-            portfolio_data["tabs"].append({
-                "category": category,
-                "images": images
-            })
-            print(f"      ✓ {len(images)} images")
+                    print(f"      {child_name}: {len(child_images)} images")
+                else:
+                    print(f"      {child_name}: 0 images (skipping empty sub-folder)")
+
+            combined_images = parent_own_images + all_child_images
+            print(f"   Total (parent + children): {len(combined_images)} images")
+
+            if combined_images:
+                portfolio_data["tabs"].append({
+                    "category": category,
+                    "images": combined_images,   # parent shows ALL images combined
+                    "has_children": len(children) > 0,
+                    "children": children
+                })
         else:
-            print(f"      ⚠️  No images found")
-    
+            # --- Flat mode ---
+            images = get_image_entries(
+                category_path, f"images/{category}", drive_links
+            )
+            if images:
+                portfolio_data["tabs"].append({
+                    "category": category,
+                    "images": images,
+                    "has_children": False
+                })
+                print(f"      {len(images)} images")
+            else:
+                print(f"      Warning: No images found")
+
     import random
     
-    # Create a shuffled definition of "All Photos" for the main page
+    # Build "All Photos" by aggregating flat-category images and child images
     all_photos_list = []
     for tab in portfolio_data["tabs"]:
-        all_photos_list.extend(tab["images"])
-    
+        if tab.get("has_children"):
+            # Add each child's images individually to keep things accurate
+            for child in tab.get("children", []):
+                all_photos_list.extend(child["images"])
+            # Also include any images directly in the parent folder
+            child_image_paths = {img["path"] for child in tab.get("children", [])
+                                  for img in child["images"]}
+            for img in tab["images"]:
+                if img["path"] not in child_image_paths:
+                    all_photos_list.append(img)
+        else:
+            all_photos_list.extend(tab["images"])
+
     random.shuffle(all_photos_list)
     portfolio_data["all_images"] = all_photos_list
     
     return portfolio_data
+
 
 def setup_site_directory():
     """Create site directory if it doesn't exist"""
@@ -129,11 +199,11 @@ def generate_data_json(portfolio_data):
     with open(output_path, 'w') as f:
         json.dump(portfolio_data, f, indent=2)
     
-    print(f"✅ Generated: {output_path}")
+    print(f"Generated: {output_path}")
 
 def copy_frontend_files(config):
     """Copy and template HTML, CSS, JS files to site directory"""
-    print("\n📋 Processing Frontend Files...")
+    print("\nProcessing Frontend Files...")
     
     # Process index.html with config substitutions
     index_path = os.path.join(SRC_DIR, 'index.html')
@@ -151,7 +221,6 @@ def copy_frontend_files(config):
         if insta_url:
              linked_handle = f'<a href="{insta_url}" target="_blank" style="text-decoration: none; color: inherit;">{handle}</a>'
              content = content.replace('@YourHandle', linked_handle)
-             # Also replace standalone URL placeholder for icon
              content = content.replace('INSTAGRAM_URL_PLACEHOLDER', insta_url)
         else:
              content = content.replace('@YourHandle', handle)
@@ -162,7 +231,6 @@ def copy_frontend_files(config):
         profile_pic_path = os.path.join(BASE_DIR, 'photos', profile_pic_filename) if profile_pic_filename else None
         
         if profile_pic_path and os.path.exists(profile_pic_path):
-            # Using style injection for background image
             css_injection = f"""<style>
                 .profile-image {{
                     background-image: url('images/{profile_pic_filename}');
@@ -176,7 +244,7 @@ def copy_frontend_files(config):
         
         with open(os.path.join(SITE_DIR, 'index.html'), 'w') as f:
             f.write(content)
-        print("   ✓ index.html (customized)")
+        print("   index.html (customized)")
 
     # Copy other files directly
     for file in ['style.css', 'script.js']:
@@ -184,26 +252,24 @@ def copy_frontend_files(config):
         if os.path.exists(src_file):
             dest = os.path.join(SITE_DIR, file)
             shutil.copy2(src_file, dest)
-            print(f"   ✓ {file}")
+            print(f"   {file}")
         else:
-            print(f"   ⚠️  {file} not found - skipping")
+            print(f"   Warning: {file} not found - skipping")
 
 def copy_images(config):
-    """Copy optimized images and profile pic to site/images/ directory"""
+    """Copy optimized images (including nested sub-folders) to site/images/"""
     images_dir = os.path.join(SITE_DIR, 'images')
     
-    print("\n📸 Copying Images to Site...")
+    print("\nCopying Images to Site...")
     
     if not os.path.exists(PHOTOS_DIR):
-        print(f"   ⚠️  {PHOTOS_DIR}/ not found - skipping")
+        print(f"   Warning: {PHOTOS_DIR}/ not found - skipping")
         return
     
-    # Create images directory
     os.makedirs(images_dir, exist_ok=True)
     
     total_copied = 0
     
-    # Copy all category folders
     for category in os.listdir(PHOTOS_DIR):
         category_src = os.path.join(PHOTOS_DIR, category)
         
@@ -212,16 +278,19 @@ def copy_images(config):
         
         category_dest = os.path.join(images_dir, category)
         
-        # Copy entire category folder
+        # Copy entire category folder tree (handles nested sub-folders automatically)
         if os.path.exists(category_dest):
             shutil.rmtree(category_dest)
         shutil.copytree(category_src, category_dest)
         
-        # Count images
-        images = [f for f in os.listdir(category_dest) 
-                 if os.path.splitext(f.lower())[1] in SUPPORTED_FORMATS]
-        total_copied += len(images)
-        print(f"   ✓ {category}: {len(images)} images")
+        # Count all images recursively
+        cat_count = sum(
+            1 for root, _, files in os.walk(category_dest)
+            for f in files
+            if os.path.splitext(f.lower())[1] in SUPPORTED_FORMATS
+        )
+        total_copied += cat_count
+        print(f"   {category}: {cat_count} images")
     
     # Copy profile picture
     profile_pic = config.get('profile_picture')
@@ -229,9 +298,9 @@ def copy_images(config):
         src = os.path.join(BASE_DIR, 'photos', profile_pic)
         if os.path.exists(src):
             shutil.copy2(src, os.path.join(images_dir, profile_pic))
-            print(f"   ✓ Profile picture copied: {profile_pic}")
+            print(f"   Profile picture copied: {profile_pic}")
         else:
-             print(f"   ⚠️ Profile picture not found at: {src}")
+             print(f"   Warning: Profile picture not found at: {src}")
 
     print(f"\n   Total: {total_copied} images copied to site/")
 
