@@ -22,7 +22,46 @@ PHOTOS_DIR = os.path.join(BASE_DIR, 'optimized')  # Use optimized images
 RAW_PHOTOS_DIR = os.path.join(BASE_DIR, 'photos')
 SITE_DIR = os.path.join(BASE_DIR, 'site')
 SRC_DIR = os.path.join(BASE_DIR, 'src')
-SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp'}  # Excluding HEIC - converted to JPG
+SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4', '.mov', '.webm', '.m4v'}
+VIDEO_FORMATS = {'.mp4', '.mov', '.webm', '.m4v'}
+
+def get_video_dimensions(file_path):
+    """Extract width and height from video file using macOS mdls or binary atom parser."""
+    try:
+        import subprocess
+        res = subprocess.run(['mdls', '-name', 'kMDItemPixelWidth', '-name', 'kMDItemPixelHeight', file_path], capture_output=True, text=True)
+        if res.returncode == 0:
+            w = h = None
+            for line in res.stdout.strip().split('\n'):
+                if 'kMDItemPixelWidth' in line and '=' in line:
+                    val = line.split('=')[1].strip()
+                    if val.isdigit() and int(val) > 0:
+                        w = int(val)
+                elif 'kMDItemPixelHeight' in line and '=' in line:
+                    val = line.split('=')[1].strip()
+                    if val.isdigit() and int(val) > 0:
+                        h = int(val)
+            if w and h:
+                return w, h
+    except Exception:
+        pass
+
+    try:
+        with open(file_path, 'rb') as f:
+            data = f.read(1024 * 1024)
+            idx = data.find(b'tkhd')
+            if idx != -1:
+                version = data[idx + 4]
+                w_offset = idx + (88 if version != 0 else 76)
+                h_offset = idx + (92 if version != 0 else 80)
+                if len(data) >= h_offset + 4:
+                    width = int.from_bytes(data[w_offset:w_offset+2], 'big')
+                    height = int.from_bytes(data[h_offset:h_offset+2], 'big')
+                    if width > 0 and height > 0:
+                        return width, height
+    except Exception:
+        pass
+    return 1080, 1080
 
 def load_config():
     """Load user configuration with strict validation"""
@@ -125,16 +164,26 @@ def get_image_entries(folder_path, relative_prefix, drive_links):
                     drive_url = link_url
                     break
 
+        media_type = "video" if ext in VIDEO_FORMATS else ("gif" if ext == ".gif" else "image")
+
         width = height = None
-        try:
-            with Image.open(file_path) as img:
-                width, height = img.size
-        except Exception:
-            pass
+        if media_type == "video":
+            width, height = get_video_dimensions(file_path)
+        else:
+            try:
+                with Image.open(file_path) as img:
+                    width, height = img.size
+            except Exception:
+                pass
 
         date = extract_image_date(file_path, relative_prefix, file)
 
-        entry = {"name": file, "path": relative_path, "drive_url": drive_url}
+        entry = {
+            "name": file,
+            "path": relative_path,
+            "drive_url": drive_url,
+            "media_type": media_type
+        }
         if width and height:
             entry["width"] = width
             entry["height"] = height

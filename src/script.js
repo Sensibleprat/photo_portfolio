@@ -238,42 +238,250 @@ function getAspectHeight(image) {
     return 1.25;
 }
 
+// --- Video Playback & Viewport Observer ---
+let activeVideoController = null;
+
+const PLAY_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+</svg>`;
+
+const PAUSE_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <rect x="6" y="4" width="4" height="16"></rect>
+    <rect x="14" y="4" width="4" height="16"></rect>
+</svg>`;
+
+const MUTE_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+    <line x1="23" y1="9" x2="17" y2="15"></line>
+    <line x1="17" y1="9" x2="23" y2="15"></line>
+</svg>`;
+
+const UNMUTE_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+</svg>`;
+
+const videoViewportObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.25) {
+            const controller = entry.target._videoController;
+            if (controller && controller.isPlaying) {
+                controller.pause();
+            }
+        }
+    });
+}, { threshold: [0, 0.25, 0.5] });
+
 function createGalleryItemElement(image) {
     const item = document.createElement('div');
     item.className = 'gallery-item';
 
-    const img = document.createElement('img');
     const safeSrc = encodeURI(image.path);
-    img.src = safeSrc;
-    img.alt = image.name;
-    img.loading = 'lazy';
+    const driveUrl = image.drive_url || safeSrc;
+    const isVideo = image.media_type === 'video';
+    const isGif = image.media_type === 'gif';
 
-    // Automatic retry if a high-res image request drops or times out
-    let retries = 0;
-    img.onerror = () => {
-        if (retries < 3) {
-            retries++;
-            setTimeout(() => {
-                img.src = `${safeSrc}?retry=${Date.now()}`;
-            }, 300 * retries);
+    if (isVideo) {
+        // Video element
+        const video = document.createElement('video');
+        video.src = safeSrc;
+        video.preload = 'metadata';
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+
+        if (image.width && image.height) {
+            video.style.aspectRatio = `${image.width} / ${image.height}`;
         }
-    };
 
-    if (image.width && image.height) {
-        img.style.aspectRatio = `${image.width} / ${image.height}`;
+        // Auto-adapt to actual video dimensions once metadata loads
+        video.addEventListener('loadedmetadata', () => {
+            if (video.videoWidth && video.videoHeight) {
+                video.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
+            }
+        });
+
+        // Top-Right Idle Media Badge
+        const badge = document.createElement('div');
+        badge.className = 'gallery-media-badge';
+        badge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg> <span>VIDEO</span>`;
+        item.appendChild(badge);
+
+        // Top-Right Action Buttons
+        const actions = document.createElement('div');
+        actions.className = 'gallery-actions-overlay';
+
+        // 1. Play/Pause button
+        const playBtn = document.createElement('button');
+        playBtn.className = 'gallery-action-btn gallery-btn-play';
+        playBtn.title = "Play video";
+        playBtn.setAttribute('aria-label', "Play video");
+        playBtn.innerHTML = PLAY_ICON_SVG;
+
+        // 2. Audio Mute/Unmute button
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'gallery-action-btn gallery-btn-audio';
+        audioBtn.title = "Unmute audio";
+        audioBtn.setAttribute('aria-label', "Unmute audio");
+        audioBtn.innerHTML = MUTE_ICON_SVG;
+
+        // 3. Drive Link button
+        const linkBtn = document.createElement('button');
+        linkBtn.className = 'gallery-action-btn gallery-btn-link';
+        linkBtn.title = "View in Google Drive";
+        linkBtn.setAttribute('aria-label', "View in Google Drive");
+        linkBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>`;
+        linkBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.open(driveUrl, '_blank');
+        });
+
+        // Scrubber / Progress Bar
+        const scrubber = document.createElement('div');
+        scrubber.className = 'gallery-video-scrubber';
+        const progressFill = document.createElement('div');
+        progressFill.className = 'gallery-video-progress-fill';
+        scrubber.appendChild(progressFill);
+
+        // Controller logic
+        const controller = {
+            isPlaying: false,
+            play() {
+                // Pause any other currently playing video
+                if (activeVideoController && activeVideoController !== controller) {
+                    activeVideoController.pause();
+                }
+                activeVideoController = controller;
+                video.play().then(() => {
+                    controller.isPlaying = true;
+                    item.classList.add('is-playing');
+                    playBtn.title = "Pause video";
+                    playBtn.setAttribute('aria-label', "Pause video");
+                    playBtn.innerHTML = PAUSE_ICON_SVG;
+                }).catch(() => {});
+            },
+            pause() {
+                video.pause();
+                controller.isPlaying = false;
+                item.classList.remove('is-playing');
+                playBtn.title = "Play video";
+                playBtn.setAttribute('aria-label', "Play video");
+                playBtn.innerHTML = PLAY_ICON_SVG;
+                if (activeVideoController === controller) {
+                    activeVideoController = null;
+                }
+            },
+            toggle() {
+                if (controller.isPlaying) {
+                    controller.pause();
+                } else {
+                    controller.play();
+                }
+            }
+        };
+
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            controller.toggle();
+        });
+
+        audioBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            video.muted = !video.muted;
+            if (video.muted) {
+                audioBtn.title = "Unmute audio";
+                audioBtn.setAttribute('aria-label', "Unmute audio");
+                audioBtn.innerHTML = MUTE_ICON_SVG;
+            } else {
+                video.volume = 1.0;
+                audioBtn.title = "Mute audio";
+                audioBtn.setAttribute('aria-label', "Mute audio");
+                audioBtn.innerHTML = UNMUTE_ICON_SVG;
+            }
+        });
+
+        // Time progress update
+        video.addEventListener('timeupdate', () => {
+            if (video.duration) {
+                const pct = (video.currentTime / video.duration) * 100;
+                progressFill.style.width = `${pct}%`;
+            }
+        });
+
+        // Seeking via scrubber click & scrub
+        const seek = (e) => {
+            e.stopPropagation();
+            const rect = scrubber.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            if (video.duration) {
+                video.currentTime = pos * video.duration;
+            }
+        };
+        scrubber.addEventListener('click', seek);
+
+        actions.appendChild(playBtn);
+        actions.appendChild(audioBtn);
+        actions.appendChild(linkBtn);
+        item.appendChild(actions);
+        item.appendChild(scrubber);
+
+        // Clicking the video item directly also toggles playback
+        item.addEventListener('click', () => {
+            controller.toggle();
+        });
+
+        item.appendChild(video);
+
+        // Register with viewport observer for auto-pause on scroll
+        item._videoController = controller;
+        videoViewportObserver.observe(item);
+
+    } else {
+        // Image / GIF element
+        const img = document.createElement('img');
+        img.src = safeSrc;
+        img.alt = image.name;
+        img.loading = 'lazy';
+
+        // Automatic retry if request drops
+        let retries = 0;
+        img.onerror = () => {
+            if (retries < 3) {
+                retries++;
+                setTimeout(() => {
+                    img.src = `${safeSrc}?retry=${Date.now()}`;
+                }, 300 * retries);
+            }
+        };
+
+        if (image.width && image.height) {
+            img.style.aspectRatio = `${image.width} / ${image.height}`;
+        }
+
+        if (image.drive_url) {
+            img.style.cursor = 'pointer';
+            img.title = "Click to view in Google Drive";
+        }
+
+        if (isGif) {
+            const badge = document.createElement('div');
+            badge.className = 'gallery-media-badge';
+            badge.textContent = 'GIF';
+            item.appendChild(badge);
+        }
+
+        item.addEventListener('click', () => {
+            window.open(driveUrl, '_blank');
+        });
+
+        item.appendChild(img);
     }
-
-    if (image.drive_url) {
-        img.style.cursor = 'pointer';
-        img.title = "Click to view in Google Drive";
-    }
-
-    item.addEventListener('click', () => {
-        const url = image.drive_url || safeSrc;
-        window.open(url, '_blank');
-    });
-
-    item.appendChild(img);
 
     if (image.date) {
         const overlay = document.createElement('div');

@@ -225,7 +225,8 @@ body {
     transition: transform 0.2s ease;
 }
 
-.gallery-item img {
+.gallery-item img,
+.gallery-item video {
     width: 100%;
     height: auto;
     display: block;
@@ -233,8 +234,113 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.gallery-item:hover img {
+.gallery-item:hover img,
+.gallery-item:hover video {
     opacity: 0.92;
+}
+
+/* Media Badges (Top-Right Idle State) */
+.gallery-media-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 0.72em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.2s ease;
+}
+
+.gallery-media-badge svg {
+    display: block;
+}
+
+.gallery-item:hover .gallery-media-badge {
+    opacity: 0;
+}
+
+/* Action Buttons (Top-Right Hover State) */
+.gallery-actions-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 5;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.gallery-item:hover .gallery-actions-overlay,
+.gallery-item.is-playing .gallery-actions-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.gallery-action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.68);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.gallery-action-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.08);
+}
+
+.gallery-action-btn svg {
+    display: block;
+}
+
+/* Video Scrubber & Progress Bar */
+.gallery-video-scrubber {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    z-index: 6;
+    transition: height 0.15s ease, background-color 0.15s ease;
+}
+
+.gallery-item:hover .gallery-video-scrubber,
+.gallery-item.is-playing .gallery-video-scrubber,
+.gallery-video-scrubber:hover {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.gallery-video-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #ffffff;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+    transition: width 0.1s linear;
 }
 
 /* Date Overlay on Hover (Desktop) */
@@ -243,7 +349,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 32px 14px 10px 14px;
+    padding: 32px 14px 12px 14px;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.35) 50%, transparent 100%);
     display: flex;
     align-items: flex-end;
@@ -252,6 +358,7 @@ body {
     opacity: 0;
     transform: translateY(6px);
     transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 3;
 }
 
 .gallery-date-text {
@@ -409,6 +516,16 @@ body {
     /* 6. Hide Date Overlay on Mobile Devices */
     .gallery-date-overlay {
         display: none !important;
+    }
+
+    /* 7. Action buttons on mobile devices */
+    .gallery-actions-overlay {
+        opacity: 0.95;
+        transform: none;
+    }
+
+    .gallery-media-badge {
+        display: none;
     }
 }
 

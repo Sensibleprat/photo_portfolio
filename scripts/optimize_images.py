@@ -26,13 +26,42 @@ MAX_HEIGHT = 4000            # Keep large dimensions
 JPEG_QUALITY = 95            # 95% quality (minimal loss)
 PRESERVE_FORMAT = False      # Convert all to JPG for browser compatibility
 
-SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp'}
+SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp', '.gif', '.mp4', '.mov', '.webm', '.m4v'}
+VIDEO_FORMATS = {'.mp4', '.mov', '.webm', '.m4v'}
+
+
+def optimize_video(input_path, output_path):
+    """Compress video for fast web delivery using hardware acceleration (keeping under 25MB limit)"""
+    try:
+        import subprocess
+        if shutil.which('avconvert'):
+            cmd = [
+                'avconvert',
+                '-s', input_path,
+                '-p', 'Preset640x480',
+                '--duration', '25',
+                '-o', output_path,
+                '--replace'
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0 and os.path.exists(output_path):
+                return True
+    except Exception as e:
+        print(f"   Warning: video optimization fallback: {e}")
+
+    shutil.copy2(input_path, output_path)
+    return True
 
 
 def optimize_image(input_path, output_path):
-    """Optimize a single image (or copy if optimization disabled)"""
+    """Optimize a single image or video"""
     try:
-        if not ENABLE_OPTIMIZATION:
+        ext = os.path.splitext(input_path.lower())[1]
+
+        if ext in VIDEO_FORMATS:
+            return optimize_video(input_path, output_path)
+
+        if ext == '.gif' or not ENABLE_OPTIMIZATION:
             shutil.copy2(input_path, output_path)
             return True
         
@@ -104,7 +133,9 @@ def process_folder(input_folder, output_folder, label="", total_counts=None):
                 continue
 
             # Determine output filename
-            if ENABLE_OPTIMIZATION and not PRESERVE_FORMAT:
+            if ext in VIDEO_FORMATS or ext == '.gif':
+                output_filename = entry
+            elif ENABLE_OPTIMIZATION and not PRESERVE_FORMAT:
                 output_filename = os.path.splitext(entry)[0] + '.jpg'
             else:
                 output_filename = entry

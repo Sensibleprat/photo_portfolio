@@ -52,8 +52,8 @@ def get_folders(service, parent_id):
     return results.get('files', [])
 
 def get_images(service, folder_id):
-    """Gets images inside a specific folder."""
-    query = f"'{folder_id}' in parents and mimeType contains 'image/' and trashed = false"
+    """Gets images and videos inside a specific folder."""
+    query = f"'{folder_id}' in parents and (mimeType contains 'image/' or mimeType contains 'video/') and trashed = false"
     fields = "files(id, name, mimeType, webViewLink)"
     results = service.files().list(q=query, fields=fields).execute()
     return results.get('files', [])
