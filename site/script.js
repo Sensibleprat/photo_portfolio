@@ -274,6 +274,17 @@ function createGalleryItemElement(image) {
     });
 
     item.appendChild(img);
+
+    if (image.date) {
+        const overlay = document.createElement('div');
+        overlay.className = 'gallery-date-overlay';
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'gallery-date-text';
+        dateSpan.textContent = image.date;
+        overlay.appendChild(dateSpan);
+        item.appendChild(overlay);
+    }
+
     return item;
 }
 

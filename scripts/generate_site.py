@@ -10,9 +10,16 @@ import shutil
 from pathlib import Path
 from PIL import Image
 
+from datetime import datetime
+import pillow_heif
+
+# Register HEIC opener for EXIF inspection on raw files
+pillow_heif.register_heif_opener()
+
 # Configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PHOTOS_DIR = os.path.join(BASE_DIR, 'optimized')  # Use optimized images
+RAW_PHOTOS_DIR = os.path.join(BASE_DIR, 'photos')
 SITE_DIR = os.path.join(BASE_DIR, 'site')
 SRC_DIR = os.path.join(BASE_DIR, 'src')
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp'}  # Excluding HEIC - converted to JPG
@@ -49,6 +56,53 @@ def load_drive_links():
             return json.load(f)
     return {}
 
+def extract_image_date(file_path, relative_prefix, file_name):
+    """Extract photo capture date from EXIF metadata (formatted as DD/MM/YYYY)."""
+    stem = os.path.splitext(file_name)[0]
+    # Check corresponding raw directory first (preserves camera EXIF from HEIC/raw files)
+    rel_subpath = relative_prefix.replace('images/', '', 1) if relative_prefix.startswith('images/') else relative_prefix
+    raw_folder = os.path.join(RAW_PHOTOS_DIR, rel_subpath)
+    
+    target_path = None
+    if os.path.exists(raw_folder):
+        for candidate in os.listdir(raw_folder):
+            if os.path.splitext(candidate)[0] == stem:
+                target_path = os.path.join(raw_folder, candidate)
+                break
+    if not target_path or not os.path.exists(target_path):
+        target_path = file_path
+
+    date_str = None
+    if target_path and os.path.exists(target_path):
+        try:
+            with Image.open(target_path) as img:
+                exif = img.getexif()
+                if exif:
+                    # Sub-IFD tag 0x8769 contains DateTimeOriginal / DateTimeDigitized
+                    try:
+                        sub = exif.get_ifd(0x8769)
+                        date_str = sub.get(36867) or sub.get(36868)
+                    except Exception:
+                        pass
+                    if not date_str:
+                        date_str = exif.get(306)
+        except Exception:
+            pass
+
+    if date_str and isinstance(date_str, str) and len(date_str) >= 10:
+        try:
+            dt = datetime.strptime(date_str[:10], '%Y:%m:%d')
+            return dt.strftime('%d/%m/%Y')
+        except Exception:
+            pass
+
+    # Fallback to file timestamp
+    if target_path and os.path.exists(target_path):
+        mtime = os.path.getmtime(target_path)
+        return datetime.fromtimestamp(mtime).strftime('%d/%m/%Y')
+    return None
+
+
 def get_image_entries(folder_path, relative_prefix, drive_links):
     """Scan a single flat folder for images and return a list of image entry dicts."""
     images = []
@@ -78,10 +132,14 @@ def get_image_entries(folder_path, relative_prefix, drive_links):
         except Exception:
             pass
 
+        date = extract_image_date(file_path, relative_prefix, file)
+
         entry = {"name": file, "path": relative_path, "drive_url": drive_url}
         if width and height:
             entry["width"] = width
             entry["height"] = height
+        if date:
+            entry["date"] = date
         images.append(entry)
     return images
 
