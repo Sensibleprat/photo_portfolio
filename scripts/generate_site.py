@@ -383,6 +383,14 @@ def copy_images(config):
         return
     
     os.makedirs(images_dir, exist_ok=True)
+
+    # Clean up stale categories in site/images that no longer exist in optimized/
+    opt_categories = set(os.listdir(PHOTOS_DIR))
+    for existing in os.listdir(images_dir):
+        existing_path = os.path.join(images_dir, existing)
+        if os.path.isdir(existing_path) and existing not in opt_categories:
+            print(f"   Removing deleted category from site: {existing}")
+            shutil.rmtree(existing_path)
     
     total_copied = 0
     
