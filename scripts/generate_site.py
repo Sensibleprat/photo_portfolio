@@ -207,8 +207,17 @@ def scan_photos(drive_links):
         print("   Run 'python optimize_images.py' first to create optimized images.")
         return portfolio_data
     
-    categories = [d for d in sorted(os.listdir(PHOTOS_DIR))
+    categories = [d for d in os.listdir(PHOTOS_DIR)
                   if os.path.isdir(os.path.join(PHOTOS_DIR, d)) and not d.startswith('.')]
+    
+    # Sort categories alphabetically, but place "Learning V-Editing" at the very end
+    def category_sort_key(name):
+        lower_name = name.lower().strip()
+        if 'learning' in lower_name or 'vlog' in lower_name:
+            return (1, lower_name)
+        return (0, lower_name)
+
+    categories.sort(key=category_sort_key)
     
     print("Scanning Photo Folders...")
     
